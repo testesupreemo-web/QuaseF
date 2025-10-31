@@ -1686,9 +1686,14 @@
             }
 
             let listaPendencias = '';
-            pendenciasAtrasadas.forEach((p, index) => {
-                listaPendencias += `${index + 1}. O.S ${p.numeroOS} - ${p.cliente}\n`;
+                pendenciasAtrasadas.forEach((p, index) => {
+                        listaPendencias += `${index + 1}. O.S ${p.numeroOS} - ${p.cliente}\n`;
+                        if (p.descricao) {
+                        listaPendencias += `   Descrição: ${p.descricao}\n`;
+                            }
+                listaPendencias += `\n`;
             });
+
 
             const templateParams = {
                 to_email: emailDestino,
