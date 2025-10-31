@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Pendências O.S</title>
+    
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function(){
+            emailjs.init("SemwnDhUgHqJ1l0VG");
+        })();
+    </script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, push, set, onValue, update, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAz0AnZ_-IImzWZioHy940uukfpFlZVR2o",
+            authDomain: "planilha-suprema-5bd7f.firebaseapp.com",
+            databaseURL: "https://planilha-suprema-5bd7f-default-rtdb.firebaseio.com",
+            projectId: "planilha-suprema-5bd7f",
+            storageBucket: "planilha-suprema-5bd7f.firebasestorage.app",
+            messagingSenderId: "760644555297",
+            appId: "1:760644555297:web:c538ac1e23df00f5af0960",
+            measurementId: "G-VKDWWGSHGT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const database = getDatabase(app);
+
+        window.firebaseDB = database;
+        window.firebaseRef = ref;
+        window.firebasePush = push;
+        window.firebaseSet = set;
+        window.firebaseOnValue = onValue;
+        window.firebaseUpdate = update;
+        window.firebaseRemove = remove;
+        
+        console.log('✅ Firebase inicializado com sucesso!');
+    </script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #dee2e6 100%);
+            min-height: 100vh;
+            padding: 30px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: drift 60s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes drift {
+            from { transform: translate(0, 0); }
+            to { transform: translate(50px, 50px); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            background: white;
+            backdrop-filter: blur(20px);
+            border: 3px solid #212529;
+            padding: 50px 40px;
+            border-radius: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            margin-bottom: 30px;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header h1 {
+            font-size: 3.2em;
+            font-weight: 900;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #212529 0%, #495057 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -2px;
+        }
+
+        .header p {
+            color: #495057;
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            animation: fadeInUp 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .glass-card:nth-child(2) { animation-delay: 0.1s; }
+        .glass-card:nth-child(3) { animation-delay: 0.2s; }
+        .glass-card:nth-child(4) { animation-delay: 0.3s; }
+
+        .email-config-card {
+            background: linear-gradient(135deg, rgba(52, 58, 64, 0.05), rgba(255, 255, 255, 0.95));
+            border: 2px solid #495057;
+        }
+
+        .email-config-card h3 {
+            color: #212529;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5em;
+            font-weight: 800;
+        }
+
+        .email-config-card p {
+            color: #495057;
+            font-size: 15px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid rgba(0, 0, 0, 0.15);
+            border-radius: 15px;
+            font-size: 15px;
+            font-family: inherit;
+            margin-bottom: 20px;
+            background: white;
+            color: #212529;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .config-input:focus {
+            outline: none;
+            border-color: #212529;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .email-hint {
+            font-size: 13px;
+            color: #6c757d;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-email {
+            background: linear-gradient(135deg, #212529 0%, #343a40 100%);
+            color: white;
+            padding: 18px 35px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 15px;
+            transition: all 0.4s;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-email:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-group label {
+            font-weight: 700;
+            color: #212529;
+            font-size: 13px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 16px 20px;
+            border: 2px solid rgba(0, 0, 0, 0.15);
+            border-radius: 15px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            background: white;
+            color: #212529;
+            font-weight: 500;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #212529;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+            line-height: 1.6;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 18px 40px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.4s;
+            flex: 1;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #212529 0%, #343a40 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #212529;
+            border: 3px solid #212529;
+        }
+
+        .btn-secondary:hover {
+            background: #212529;
+            color: white;
+            transform: translateY(-3px) scale(1.02);
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 20px 60px 20px 25px;
+            border: 2px solid rgba(0, 0, 0, 0.15);
+            border-radius: 50px;
+            font-size: 16px;
+            background: white;
+            color: #212529;
+            font-weight: 500;
+        }
+
+        .search-box::after {
+            content: "🔍";
+            position: absolute;
+            right: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+        }
+
+        .filter-section {
+            margin-bottom: 25px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: white;
+            border: 2px solid rgba(0, 0, 0, 0.15);
+            padding: 12px 25px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #212529;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .filter-btn:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-btn.active {
+            background: #212529;
+            color: white;
+            border-color: #212529;
+        }
+
+        .btn-clear-filters {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-clear-filters:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(220, 53, 69, 0.3);
+        }
+
+        .filter-dropdown {
+            display: none;
+            background: white;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            animation: slideDown 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-dropdown.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .filter-dropdown h4 {
+            color: #212529;
+            font-size: 1.1em;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .filter-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            border-left: 4px solid transparent;
+        }
+
+        .filter-item:hover {
+            background: #e9ecef;
+            border-left-color: #212529;
+            transform: translateX(5px);
+        }
+
+        .filter-item.selected {
+            background: #212529;
+            color: white;
+            border-left-color: #ffc107;
+        }
+
+        .filter-item.selected::after {
+            content: " ✓";
+            font-weight: 900;
+        }
+
+        .active-filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .filter-tag {
+            background: linear-gradient(135deg, #212529 0%, #343a40 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: fadeIn 0.3s;
+        }
+
+        .filter-tag .remove-filter {
+            cursor: pointer;
+            font-weight: 900;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .filter-tag .remove-filter:hover {
+            transform: scale(1.2);
+            color: #dc3545;
+        }
+
+        .tabs-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            border-bottom: 3px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-button {
+            padding: 15px 35px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 800;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: -3px;
+        }
+
+        .tab-button.active {
+            color: #212529;
+            border-bottom-color: #212529;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .pendencias-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .pendencias-header h2 {
+            color: #212529;
+            font-size: 2.2em;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+
+        .counter {
+            background: linear-gradient(135deg, #212529 0%, #343a40 100%);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-weight: 800;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .pendencias-grid {
+            display: grid;
+            gap: 25px;
+        }
+
+        .pendencia-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            border: 2px solid rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .pendencia-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .pendencia-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 5px;
+            height: 100%;
+        }
+
+        .pendencia-card.vencida::before {
+            background: linear-gradient(180deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .pendencia-card.futura::before {
+            background: linear-gradient(180deg, #ffc107 0%, #ffb300 100%);
+        }
+
+        .pendencia-card.concluida::before {
+            background: linear-gradient(180deg, #28a745 0%, #20c997 100%);
+        }
+
+        .pendencia-header-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .pendencia-os {
+            font-size: 1.5em;
+            font-weight: 900;
+            color: #212529;
+        }
+
+        .status-badge {
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .status-badge.vencida {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .status-badge.futura {
+            background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+            color: #212529;
+        }
+
+        .status-badge.concluida {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .pendencia-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .info-label {
+            font-weight: 800;
+            color: #495057;
+            font-size: 10px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: block;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            color: #212529;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .pendencia-descricao {
+            background: linear-gradient(135deg, #fff3cd 0%, #fffbea 100%);
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 20px;
+            color: #856404;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .pendencia-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 12px 16px;
+            font-size: 12px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 800;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+        }
+
+        .btn-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        .btn-secondary-small {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+        }
+
+        .btn-secondary-small:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-state h3 {
+            color: #212529;
+            font-size: 1.8em;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #6c757d;
+            font-size: 16px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: white;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 800;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.vencida {
+            background: #dc3545;
+        }
+
+        .legend-dot.futura {
+            background: #ffc107;
+        }
+
+        .legend-dot.concluida {
+            background: #28a745;
+        }
+
+        .modal-confirm {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-confirm.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-confirm-content {
+            background: white;
+            padding: 50px;
+            border-radius: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+        }
+
+        .modal-confirm-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+        }
+
+        .modal-confirm-title {
+            font-size: 2em;
+            font-weight: 900;
+            color: #212529;
+            margin-bottom: 15px;
+        }
+
+        .modal-confirm-text {
+            font-size: 1.1em;
+            color: #6c757d;
+            margin-bottom: 35px;
+            line-height: 1.6;
+        }
+
+        .modal-confirm-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .modal-confirm-btn {
+            flex: 1;
+            padding: 18px 30px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+
+        .modal-confirm-btn-cancel {
+            background: #f8f9fa;
+            color: #212529;
+            border: 2px solid #dee2e6;
+        }
+
+        .modal-confirm-btn-cancel:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .modal-confirm-btn-delete {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            box-shadow: 0 5px 20px rgba(220, 53, 69, 0.3);
+        }
+
+        .modal-confirm-btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(220, 53, 69, 0.4);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 30px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-header h2 {
+            color: #212529;
+            font-weight: 900;
+            font-size: 2em;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+
+        .close-modal:hover {
+            color: #dc3545;
+            transform: rotate(90deg);
+        }
+
+        .notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-weight: 700;
+            max-width: 400px;
+            z-index: 10000;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: slideInRight 0.4s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .required { color: #dc3545; }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2.2em; }
+            .form-grid { grid-template-columns: 1fr; }
+            .button-group { flex-direction: column; }
+            .pendencia-info { grid-template-columns: repeat(2, 1fr); }
+            .pendencia-actions { grid-template-columns: 1fr; }
+            .tabs-container { flex-direction: column; gap: 0; }
+            .tab-button { padding: 12px 20px; }
+            .filter-buttons { flex-direction: column; }
+            .filter-btn { width: 100%; }
+            .modal-confirm-content { padding: 30px; }
+            .modal-confirm-icon { font-size: 60px; }
+            .modal-confirm-buttons { flex-direction: column; }
+            .pendencia-header-card { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Sistema de Pendências</h1>
+            <p>Controle Inteligente de Ordens de Serviço • Firebase Conectado</p>
+        </div>
+
+        <div class="glass-card email-config-card">
+            <h3>✉️ Alertas por Email</h3>
+            <p>Digite o email que deseja receber notificações de pendências atrasadas</p>
+            <div class="email-hint">💡 <span>O email será salvo automaticamente</span></div>
+            <input type="email" id="emailDestino" class="config-input" placeholder="exemplo@email.com" required>
+            <button class="btn-email" onclick="enviarAlertaPendencias()">📤 Enviar Alerta Agora</button>
+        </div>
+
+        <div class="glass-card">
+            <form id="pendenciaForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>📄 Número da O.S <span class="required">*</span></label>
+                        <input type="number" id="numeroOS" required placeholder="Ex: 18388">
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Cliente <span class="required">*</span></label>
+                        <input type="text" id="cliente" required placeholder="Nome do cliente">
+                    </div>
+                    <div class="form-group">
+                        <label>👨‍💼 Responsável <span class="required">*</span></label>
+                        <input type="text" id="responsavel" required placeholder="Nome do responsável">
+                    </div>
+                    <div class="form-group">
+                        <label>🏷️ Tipo <span class="required">*</span></label>
+                        <select id="tipoPendencia" required>
+                            <option value="">Selecione o tipo</option>
+                            <option value="Mapear O.S">Mapear O.S</option>
+                            <option value="Colocar RC">Colocar RC</option>
+                            <option value="Colocar PC">Colocar PC</option>
+                            <option value="Pendente de Entrega">Pendente de Entrega</option>
+                            <option value="Relatório Final">Relatório Final</option>
+                            <option value="Relatório Inicial">Relatório Inicial</option>
+                            <option value="Verificação">Verificação</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>📅 Data Prazo <span class="required">*</span></label>
+                        <input type="date" id="dataPrazo" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>📝 Descrição</label>
+                        <textarea id="descricao" placeholder="Descreva detalhadamente a pendência..."></textarea>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">💾 Salvar Pendência</button>
+                    <button type="button" class="btn btn-secondary" onclick="limparFormulario()">🔄 Limpar</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="glass-card">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Buscar por O.S, Cliente, Responsável ou Data...">
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="filter-section">
+                <div class="filter-buttons">
+                    <button class="filter-btn" onclick="toggleFilter('status')">📊 Filtrar por Status</button>
+                    <button class="filter-btn" onclick="toggleFilter('responsavel')">👨‍💼 Filtrar por Responsável</button>
+                    <button class="filter-btn" onclick="toggleFilter('tipo')">🏷️ Filtrar por Tipo</button>
+                    <button class="btn-clear-filters" onclick="limparFiltros()">🗑️ Limpar Filtros</button>
+                </div>
+
+                <div id="activeFiltersContainer" class="active-filters"></div>
+
+                <div id="filterStatus" class="filter-dropdown">
+                    <h4>📊 Selecione Status (múltipla seleção)</h4>
+                    <div id="listStatus">
+                        <div class="filter-item" onclick="toggleFiltroItem('status', 'atrasada')">🔴 Atrasada</div>
+                        <div class="filter-item" onclick="toggleFiltroItem('status', 'no prazo')">🟡 No Prazo</div>
+                    </div>
+                </div>
+
+                <div id="filterResponsavel" class="filter-dropdown">
+                    <h4>👨‍💼 Selecione Responsáveis (múltipla seleção)</h4>
+                    <div id="listResponsavel"></div>
+                </div>
+
+                <div id="filterTipo" class="filter-dropdown">
+                    <h4>🏷️ Selecione Tipos (múltipla seleção)</h4>
+                    <div id="listTipo"></div>
+                </div>
+            </div>
+
+            <div class="tabs-container">
+                <button class="tab-button active" onclick="switchTab('ativas')">📋 Pendências Ativas</button>
+                <button class="tab-button" onclick="switchTab('concluidas')">✅ Pendências Concluídas</button>
+            </div>
+
+            <div id="tab-ativas" class="tab-content active">
+                <div class="legend">
+                    <div class="legend-item"><span class="legend-dot vencida"></span><span>Atrasada</span></div>
+                    <div class="legend-item"><span class="legend-dot futura"></span><span>No Prazo</span></div>
+                </div>
+                <div class="pendencias-header">
+                    <h2>Ativas</h2>
+                    <span class="counter" id="contadorAtivas">0 pendências</span>
+                </div>
+                <div class="pendencias-grid" id="listaAtivas">
+                    <div class="empty-state">
+                        <h3>Carregando...</h3>
+                        <p>Aguarde um momento</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-concluidas" class="tab-content">
+                <div class="legend">
+                    <div class="legend-item"><span class="legend-dot concluida"></span><span>Concluída</span></div>
+                </div>
+                <div class="pendencias-header">
+                    <h2>Concluídas</h2>
+                    <span class="counter" id="contadorConcluidas">0 pendências</span>
+                </div>
+                <div class="pendencias-grid" id="listaConcluidas">
+                    <div class="empty-state">
+                        <h3>Nenhuma pendência concluída</h3>
+                        <p>Conclua pendências para vê-las aqui</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalConfirm" class="modal-confirm">
+        <div class="modal-confirm-content">
+            <div class="modal-confirm-icon">🗑️</div>
+            <div class="modal-confirm-title">Tem certeza?</div>
+            <div class="modal-confirm-text">Esta ação não poderá ser desfeita. A pendência será permanentemente excluída do sistema.</div>
+            <div class="modal-confirm-buttons">
+                <button class="modal-confirm-btn modal-confirm-btn-cancel" onclick="fecharModalConfirm()">Cancelar</button>
+                <button class="modal-confirm-btn modal-confirm-btn-delete" onclick="confirmarDelete()">Sim, Deletar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalEdicao" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ Editar Pendência</h2>
+                <button class="close-modal" onclick="fecharModal()">×</button>
+            </div>
+            <form id="formEdicao">
+                <input type="hidden" id="editId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>📄 Número da O.S <span class="required">*</span></label>
+                        <input type="number" id="editNumeroOS" required>
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Cliente <span class="required">*</span></label>
+                        <input type="text" id="editCliente" required>
+                    </div>
+                    <div class="form-group">
+                        <label>👨‍💼 Responsável <span class="required">*</span></label>
+                        <input type="text" id="editResponsavel" required>
+                    </div>
+                    <div class="form-group">
+                        <label>🏷️ Tipo <span class="required">*</span></label>
+                        <select id="editTipoPendencia" required>
+                            <option value="">Selecione o tipo</option>
+                            <option value="Mapear O.S">Mapear O.S</option>
+                            <option value="Colocar RC">Colocar RC</option>
+                            <option value="Colocar PC">Colocar PC</option>
+                            <option value="Pendente de Entrega">Pendente de Entrega</option>
+                            <option value="Relatório Final">Relatório Final</option>
+                            <option value="Relatório Inicial">Relatório Inicial</option>
+                            <option value="Verificação">Verificação</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>📅 Data Prazo <span class="required">*</span></label>
+                        <input type="date" id="editDataPrazo" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>📝 Descrição</label>
+                        <textarea id="editDescricao"></textarea>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">💾 Salvar Alterações</button>
+                    <button type="button" class="btn btn-secondary" onclick="fecharModal()">❌ Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let pendencias = [];
+        let pendenciasAtivasFiltradas = [];
+        let pendenciasConcluidasFiltradas = [];
+        let filtrosAtivos = {
+            status: [],
+            responsavel: [],
+            tipo: []
+        };
+        let idParaDeletar = null;
+
+        const EMAIL_CONFIG = {
+            serviceId: 'service_k842br2',
+            templateId: 'template_htzpbd9',
+            publicKey: 'SemwnDhUgHqJ1l0VG'
+        };
+
+        function carregarPendenciasFirebase() {
+            const pendenciasRef = window.firebaseRef(window.firebaseDB, 'pendencias');
+            
+            window.firebaseOnValue(pendenciasRef, (snapshot) => {
+                pendencias = [];
+                snapshot.forEach((childSnapshot) => {
+                    const dados = childSnapshot.val();
+                    pendencias.push({
+                        id: childSnapshot.key,
+                        ...dados
+                    });
+                });
+                
+                pendencias.sort((a, b) => {
+                    const numA = parseInt(a.numeroOS) || 0;
+                    const numB = parseInt(b.numeroOS) || 0;
+                    return numA - numB;
+                });
+                
+                atualizarListasFiltro();
+                aplicarTodosFiltros();
+            });
+        }
+
+        function atualizarListasFiltro() {
+            const responsaveisUnicos = [...new Set(pendencias.map(p => p.responsavel))].sort();
+            document.getElementById('listResponsavel').innerHTML = responsaveisUnicos.map(resp => {
+                const respEscaped = resp.replace(/'/g, "\\'");
+                return `<div class="filter-item ${filtrosAtivos.responsavel.includes(resp) ? 'selected' : ''}" onclick="toggleFiltroItem('responsavel', '${respEscaped}')">${resp}</div>`;
+            }).join('');
+
+            const tiposUnicos = [...new Set(pendencias.map(p => p.tipoPendencia))].sort();
+            document.getElementById('listTipo').innerHTML = tiposUnicos.map(tipo => {
+                const tipoEscaped = tipo.replace(/'/g, "\\'");
+                return `<div class="filter-item ${filtrosAtivos.tipo.includes(tipo) ? 'selected' : ''}" onclick="toggleFiltroItem('tipo', '${tipoEscaped}')">${tipo}</div>`;
+            }).join('');
+
+            document.querySelectorAll('#listStatus .filter-item').forEach(item => {
+                const statusText = item.textContent.toLowerCase().includes('atrasada') ? 'atrasada' : 'no prazo';
+                if (filtrosAtivos.status.includes(statusText)) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+        }
+
+        function toggleFilter(tipo) {
+            const dropdownId = `filter${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`;
+            const dropdown = document.getElementById(dropdownId);
+            const allDropdowns = document.querySelectorAll('.filter-dropdown');
+            
+            allDropdowns.forEach(d => {
+                if (d.id !== dropdownId) {
+                    d.classList.remove('show');
+                }
+            });
+            
+            dropdown.classList.toggle('show');
+        }
+
+        function toggleFiltroItem(tipo, valor) {
+            const index = filtrosAtivos[tipo].indexOf(valor);
+            
+            if (index === -1) {
+                filtrosAtivos[tipo].push(valor);
+            } else {
+                filtrosAtivos[tipo].splice(index, 1);
+            }
+            
+            atualizarListasFiltro();
+            atualizarTagsFiltros();
+            aplicarTodosFiltros();
+        }
+
+        function removerFiltro(tipo, valor) {
+            const index = filtrosAtivos[tipo].indexOf(valor);
+            if (index !== -1) {
+                filtrosAtivos[tipo].splice(index, 1);
+            }
+            
+            atualizarListasFiltro();
+            atualizarTagsFiltros();
+            aplicarTodosFiltros();
+        }
+
+        function limparFiltros() {
+            filtrosAtivos = {
+                status: [],
+                responsavel: [],
+                tipo: []
+            };
+            
+            document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('show'));
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            
+            atualizarListasFiltro();
+            atualizarTagsFiltros();
+            aplicarTodosFiltros();
+            
+            mostrarNotificacao('🗑️ Filtros limpos!', 'success');
+        }
+
+        function atualizarTagsFiltros() {
+            const container = document.getElementById('activeFiltersContainer');
+            let tagsHTML = '';
+            
+            const icones = {
+                status: '📊',
+                responsavel: '👨‍💼',
+                tipo: '🏷️'
+            };
+            
+            const nomes = {
+                'atrasada': 'Atrasada',
+                'no prazo': 'No Prazo'
+            };
+            
+            Object.keys(filtrosAtivos).forEach(tipo => {
+                filtrosAtivos[tipo].forEach(valor => {
+                    const valorEscaped = valor.replace(/'/g, "\\'");
+                    let display = valor;
+                    if (tipo === 'status') {
+                        display = nomes[valor] || valor;
+                    }
+                    tagsHTML += `
+                        <div class="filter-tag">
+                            ${icones[tipo]} ${display}
+                            <span class="remove-filter" onclick="removerFiltro('${tipo}', '${valorEscaped}')">×</span>
+                        </div>
+                    `;
+                });
+            });
+            
+            container.innerHTML = tagsHTML;
+        }
+
+        function aplicarTodosFiltros() {
+            let ativas = pendencias.filter(p => p.status === 'pendente');
+            let concluidas = pendencias.filter(p => p.status === 'concluida');
+            
+            if (filtrosAtivos.status.length > 0) {
+                ativas = ativas.filter(p => {
+                    const statusPendencia = getStatusPorData(p);
+                    if (filtrosAtivos.status.includes('atrasada') && statusPendencia === 'vencida') return true;
+                    if (filtrosAtivos.status.includes('no prazo') && statusPendencia === 'futura') return true;
+                    return false;
+                });
+            }
+            
+            if (filtrosAtivos.responsavel.length > 0) {
+                ativas = ativas.filter(p => filtrosAtivos.responsavel.includes(p.responsavel));
+                concluidas = concluidas.filter(p => filtrosAtivos.responsavel.includes(p.responsavel));
+            }
+            
+            if (filtrosAtivos.tipo.length > 0) {
+                ativas = ativas.filter(p => filtrosAtivos.tipo.includes(p.tipoPendencia));
+                concluidas = concluidas.filter(p => filtrosAtivos.tipo.includes(p.tipoPendencia));
+            }
+            
+            pendenciasAtivasFiltradas = ativas;
+            pendenciasConcluidasFiltradas = concluidas;
+            
+            renderizarPendencias();
+        }
+
+        async function salvarPendenciaFirebase(pendencia) {
+            try {
+                const pendenciasRef = window.firebaseRef(window.firebaseDB, 'pendencias');
+                const novaPendenciaRef = window.firebasePush(pendenciasRef);
+                await window.firebaseSet(novaPendenciaRef, pendencia);
+                mostrarNotificacao('✅ Pendência salva!');
+            } catch (error) {
+                mostrarNotificacao('❌ Erro ao salvar', 'error');
+            }
+        }
+
+        async function atualizarPendenciaFirebase(id, dados) {
+            try {
+                const pendenciaRef = window.firebaseRef(window.firebaseDB, `pendencias/${id}`);
+                await window.firebaseUpdate(pendenciaRef, dados);
+            } catch (error) {
+                mostrarNotificacao('❌ Erro ao atualizar', 'error');
+            }
+        }
+
+        async function deletarPendenciaFirebase(id) {
+            try {
+                const pendenciaRef = window.firebaseRef(window.firebaseDB, `pendencias/${id}`);
+                await window.firebaseRemove(pendenciaRef);
+                mostrarNotificacao('🗑️ Deletado!');
+            } catch (error) {
+                mostrarNotificacao('❌ Erro ao deletar', 'error');
+            }
+        }
+
+        function abrirModalEdicao(id) {
+            const pendencia = pendencias.find(p => p.id === id);
+            if (pendencia) {
+                document.getElementById('editId').value = id;
+                document.getElementById('editNumeroOS').value = pendencia.numeroOS;
+                document.getElementById('editCliente').value = pendencia.cliente;
+                document.getElementById('editResponsavel').value = pendencia.responsavel;
+                document.getElementById('editTipoPendencia').value = pendencia.tipoPendencia;
+                document.getElementById('editDataPrazo').value = pendencia.dataPrazo;
+                document.getElementById('editDescricao').value = pendencia.descricao || '';
+                
+                document.getElementById('modalEdicao').classList.add('show');
+            }
+        }
+
+        function fecharModal() {
+            document.getElementById('modalEdicao').classList.remove('show');
+        }
+
+        function abrirModalConfirm(id) {
+            idParaDeletar = id;
+            document.getElementById('modalConfirm').classList.add('show');
+        }
+
+        function fecharModalConfirm() {
+            idParaDeletar = null;
+            document.getElementById('modalConfirm').classList.remove('show');
+        }
+
+        async function confirmarDelete() {
+            if (idParaDeletar) {
+                await deletarPendenciaFirebase(idParaDeletar);
+                fecharModalConfirm();
+            }
+        }
+
+        function deletarPendencia(id) {
+            abrirModalConfirm(id);
+        }
+
+        document.getElementById('formEdicao').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('editId').value;
+            const dadosAtualizados = {
+                numeroOS: document.getElementById('editNumeroOS').value,
+                cliente: document.getElementById('editCliente').value,
+                responsavel: document.getElementById('editResponsavel').value,
+                tipoPendencia: document.getElementById('editTipoPendencia').value,
+                dataPrazo: document.getElementById('editDataPrazo').value,
+                descricao: document.getElementById('editDescricao').value
+            };
+
+            await atualizarPendenciaFirebase(id, dadosAtualizados);
+            mostrarNotificacao('✅ Atualizado!');
+            fecharModal();
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const emailSalvo = localStorage.getItem('emailDestino');
+            if (emailSalvo) document.getElementById('emailDestino').value = emailSalvo;
+            
+            document.getElementById('emailDestino').addEventListener('change', function() {
+                if (validarEmail(this.value.trim())) {
+                    localStorage.setItem('emailDestino', this.value.trim());
+                }
+            });
+            
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                filtrarPendencias(e.target.value);
+            });
+            
+            setTimeout(() => carregarPendenciasFirebase(), 1000);
+        });
+
+        document.getElementById('pendenciaForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const novaPendencia = {
+                numeroOS: document.getElementById('numeroOS').value,
+                cliente: document.getElementById('cliente').value,
+                responsavel: document.getElementById('responsavel').value,
+                tipoPendencia: document.getElementById('tipoPendencia').value,
+                descricao: document.getElementById('descricao').value,
+                dataPrazo: document.getElementById('dataPrazo').value,
+                status: 'pendente',
+                dataCriacao: new Date().toISOString()
+            };
+
+            await salvarPendenciaFirebase(novaPendencia);
+            limparFormulario();
+        });
+
+        function validarEmail(email) {
+            return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if (tab === 'ativas') {
+                document.querySelector('.tab-button:first-child').classList.add('active');
+                document.getElementById('tab-ativas').classList.add('active');
+            } else {
+                document.querySelector('.tab-button:last-child').classList.add('active');
+                document.getElementById('tab-concluidas').classList.add('active');
+            }
+        }
+
+        function filtrarPendencias(termo) {
+            const termoLower = termo.toLowerCase().trim();
+            
+            if (!termoLower) {
+                aplicarTodosFiltros();
+            } else {
+                let ativas = pendencias.filter(p => p.status === 'pendente');
+                let concluidas = pendencias.filter(p => p.status === 'concluida');
+                
+                ativas = ativas.filter(p => 
+                    String(p.numeroOS).includes(termoLower) ||
+                    p.cliente.toLowerCase().includes(termoLower) ||
+                    p.responsavel.toLowerCase().includes(termoLower)
+                );
+                
+                concluidas = concluidas.filter(p => 
+                    String(p.numeroOS).includes(termoLower) ||
+                    p.cliente.toLowerCase().includes(termoLower) ||
+                    p.responsavel.toLowerCase().includes(termoLower)
+                );
+                
+                pendenciasAtivasFiltradas = ativas;
+                pendenciasConcluidasFiltradas = concluidas;
+                
+                renderizarPendencias();
+            }
+        }
+
+        function getStatusPorData(pendencia) {
+            if (pendencia.status === 'concluida') return 'concluida';
+            
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            const dataPrazo = new Date(pendencia.dataPrazo + 'T00:00:00');
+            
+            return dataPrazo < hoje ? 'vencida' : 'futura';
+        }
+
+        function getStatusTexto(status) {
+            switch(status) {
+                case 'vencida': return '🔴 ATRASADA';
+                case 'futura': return '🟡 NO PRAZO';
+                case 'concluida': return '✅ CONCLUÍDA';
+                default: return '🟡 NO PRAZO';
+            }
+        }
+
+        function renderizarPendencias() {
+            renderizarAba('ativas', pendenciasAtivasFiltradas, 'listaAtivas', 'contadorAtivas');
+            renderizarAba('concluidas', pendenciasConcluidasFiltradas, 'listaConcluidas', 'contadorConcluidas');
+        }
+
+        function renderizarAba(tipo, lista, elementoId, contadorId) {
+            const listaElement = document.getElementById(elementoId);
+            const contadorElement = document.getElementById(contadorId);
+            
+            if (lista.length === 0) {
+                const mensagem = tipo === 'ativas' ? 
+                    { titulo: 'Nenhuma pendência ativa', descricao: 'Todas concluídas ou filtradas!' } :
+                    { titulo: 'Nenhuma pendência concluída', descricao: 'Conclua pendências para vê-las aqui' };
+                    
+                listaElement.innerHTML = `<div class="empty-state"><h3>${mensagem.titulo}</h3><p>${mensagem.descricao}</p></div>`;
+                contadorElement.textContent = '0 pendências';
+                return;
+            }
+
+            lista.sort((a, b) => {
+                const numA = parseInt(a.numeroOS) || 0;
+                const numB = parseInt(b.numeroOS) || 0;
+                return numA - numB;
+            });
+
+            listaElement.innerHTML = lista.map(p => {
+                const statusData = getStatusPorData(p);
+                return `
+                <div class="pendencia-card ${statusData}">
+                    <div class="pendencia-header-card">
+                        <div class="pendencia-os">O.S: ${p.numeroOS}</div>
+                        <span class="status-badge ${statusData}">${getStatusTexto(statusData)}</span>
+                    </div>
+                    
+                    <div class="pendencia-info">
+                        <div class="info-item">
+                            <span class="info-label">👤 Cliente</span>
+                            <div class="info-value">${p.cliente}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">👨‍💼 Responsável</span>
+                            <div class="info-value">${p.responsavel}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">🏷️ Tipo</span>
+                            <div class="info-value">${p.tipoPendencia}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">📅 Prazo</span>
+                            <div class="info-value">${formatarData(p.dataPrazo)}</div>
+                        </div>
+                    </div>
+                    
+                    ${p.descricao ? `<div class="pendencia-descricao">📝 ${p.descricao}</div>` : ''}
+                    
+                    <div class="pendencia-actions">
+                        <button class="btn-small btn-info" onclick="abrirModalEdicao('${p.id}')">✏️ Editar</button>
+                        ${p.status === 'pendente' ? 
+                            `<button class="btn-small btn-success" onclick="concluirPendencia('${p.id}')">✓ Concluir</button>` : 
+                            `<button class="btn-small btn-secondary-small" onclick="reabrirPendencia('${p.id}')">↩️ Reabrir</button>`
+                        }
+                        <button class="btn-small btn-danger" onclick="deletarPendencia('${p.id}')">🗑️ Deletar</button>
+                    </div>
+                </div>
+            `}).join('');
+
+            const totalVencidas = tipo === 'ativas' ? lista.filter(p => getStatusPorData(p) === 'vencida').length : 0;
+            contadorElement.textContent = `${lista.length} pendência${lista.length !== 1 ? 's' : ''}`;
+            if (totalVencidas > 0) {
+                contadorElement.textContent += ` • ${totalVencidas} atrasada${totalVencidas !== 1 ? 's' : ''}`;
+            }
+        }
+
+        async function concluirPendencia(id) {
+            await atualizarPendenciaFirebase(id, { status: 'concluida' });
+            mostrarNotificacao('✅ Concluída!');
+        }
+
+        async function reabrirPendencia(id) {
+            await atualizarPendenciaFirebase(id, { status: 'pendente' });
+            mostrarNotificacao('🔄 Reaberta!');
+            switchTab('ativas');
+        }
+
+        function limparFormulario() {
+            document.getElementById('pendenciaForm').reset();
+        }
+
+        function formatarData(data) {
+            const [ano, mes, dia] = data.split('-');
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        function enviarAlertaPendencias() {
+            const emailDestino = document.getElementById('emailDestino').value.trim();
+            
+            if (!emailDestino || !validarEmail(emailDestino)) {
+                mostrarNotificacao('❌ Email inválido!', 'error');
+                return;
+            }
+            
+            localStorage.setItem('emailDestino', emailDestino);
+
+            const pendenciasAtrasadas = pendencias.filter(p => 
+                p.status === 'pendente' && getStatusPorData(p) === 'vencida'
+            );
+
+            if (pendenciasAtrasadas.length === 0) {
+                mostrarNotificacao('✅ Nenhuma atrasada!', 'success');
+                return;
+            }
+
+            let listaPendencias = '';
+            pendenciasAtrasadas.forEach((p, index) => {
+                listaPendencias += `${index + 1}. O.S ${p.numeroOS} - ${p.cliente}\n`;
+            });
+
+            const templateParams = {
+                to_email: emailDestino,
+                total_atrasadas: pendenciasAtrasadas.length,
+                pendencias_lista: listaPendencias,
+                data_envio: new Date().toLocaleString('pt-BR')
+            };
+
+            mostrarNotificacao('📤 Enviando...', 'info');
+
+            emailjs.send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, templateParams)
+                .then(() => mostrarNotificacao(`✅ Enviado!`))
+                .catch(() => mostrarNotificacao('❌ Erro no email', 'error'));
+        }
+
+        function mostrarNotificacao(mensagem, tipo = 'success') {
+            const cores = {
+                success: 'linear-gradient(135deg, rgba(40, 167, 69, 0.95), rgba(32, 201, 151, 0.95))',
+                error: 'linear-gradient(135deg, rgba(220, 53, 69, 0.95), rgba(200, 35, 51, 0.95))',
+                info: 'linear-gradient(135deg, rgba(0, 102, 204, 0.95), rgba(0, 82, 163, 0.95))'
+            };
+            
+            const notificacao = document.createElement('div');
+            notificacao.className = 'notification';
+            notificacao.style.background = cores[tipo];
+            notificacao.style.color = 'white';
+            notificacao.textContent = mensagem;
+            document.body.appendChild(notificacao);
+
+            setTimeout(() => notificacao.remove(), 3500);
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('modalEdicao');
+            const modalConfirm = document.getElementById('modalConfirm');
+            if (event.target === modal) {
+                fecharModal();
+            }
+            if (event.target === modalConfirm) {
+                fecharModalConfirm();
+            }
+        }
+    </script>
+</body>
+</html>

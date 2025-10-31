@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Controle - Dashboard</title>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: auto;
+            width: 100%;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 50%, #f0f0f0 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(100, 100, 100, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(50, 50, 50, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .header h1 {
+            font-size: 4em;
+            font-weight: 900;
+            color: #000;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            letter-spacing: -2px;
+        }
+
+        .header p {
+            font-size: 1.3em;
+            color: #555;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 0.95em;
+            color: #777;
+            font-weight: 400;
+            margin-top: 10px;
+        }
+
+        .tabs-wrapper {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+            border: 2px solid rgba(200, 200, 200, 0.5);
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tabs-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: #f5f5f5;
+            border: 2px solid #ddd;
+            color: #555;
+            padding: 14px 30px;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tab-btn:hover {
+            background: #e8e8e8;
+            border-color: #999;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .tab-btn.active {
+            background: #000;
+            color: #fff;
+            border-color: #000;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeInContent 0.5s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeInContent {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .feature-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: all 0.4s ease;
+            border: 2px solid #e0e0e0;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            background: #fafafa;
+            border-color: #999;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-card.link {
+            cursor: pointer;
+        }
+
+        .feature-card.link:hover {
+            background: #f0f0f0;
+            border-color: #000;
+        }
+
+        .icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            display: block;
+            animation: floatIcon 3s ease-in-out infinite;
+        }
+
+        .feature-card:nth-child(1) .icon { animation-delay: 0s; }
+        .feature-card:nth-child(2) .icon { animation-delay: 0.2s; }
+        .feature-card:nth-child(3) .icon { animation-delay: 0.4s; }
+
+        @keyframes floatIcon {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .feature-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 10px;
+        }
+
+        .feature-description {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.6;
+            font-weight: 400;
+            margin-bottom: 20px;
+        }
+
+        .feature-status {
+            display: inline-block;
+            background: #ffb800;
+            color: #333;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .feature-status.active {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-access {
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 16px 40px;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            display: inline-block;
+        }
+
+        .btn-access:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+            background: #222;
+        }
+
+        .btn-disabled {
+            background: #ccc;
+            color: #888;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn-disabled:hover {
+            transform: none;
+            box-shadow: none;
+            background: #ccc;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            background: #f9f9f9;
+            border-radius: 20px;
+            border: 2px dashed #ddd;
+        }
+
+        .empty-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            opacity: 0.6;
+        }
+
+        .empty-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .empty-text {
+            color: #777;
+            font-size: 1em;
+            line-height: 1.6;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #e0e0e0;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: 900;
+            color: #000;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #777;
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #999;
+            font-size: 0.9em;
+            padding-top: 30px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2.5em; }
+            .header p { font-size: 1em; }
+            .tabs-wrapper { padding: 25px; }
+            .tabs-container { gap: 10px; }
+            .tab-btn { padding: 12px 20px; font-size: 13px; }
+            .content-grid { grid-template-columns: 1fr; }
+            .feature-card { padding: 30px 20px; }
+            .icon { font-size: 50px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🚀 Bem-vindo</div>
+            <h1>Super Controle</h1>
+            <p>Sua Plataforma Integrada de Gestão</p>
+            <div class="subtitle">Organize, monitore e controle seus processos em um único lugar</div>
+        </div>
+
+        <div class="tabs-wrapper">
+            <div class="tabs-container">
+                <button type="button" class="tab-btn active" id="btn-pendencias">📋 Sistema de Pendências</button>
+                <button type="button" class="tab-btn" id="btn-faturamento">💰 Pendências Faturamento</button>
+                <button type="button" class="tab-btn" id="btn-cronogramas">📅 Cronogramas</button>
+            </div>
+
+            <div id="pendencias-tab" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">42</div>
+                        <div class="stat-label">Pendências Ativas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">8</div>
+                        <div class="stat-label">Atrasadas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">156</div>
+                        <div class="stat-label">Concluídas</div>
+                    </div>
+                </div>
+
+                <div class="content-grid">
+                    <div class="feature-card link" onclick="window.location.href='pendencias.html';" style="cursor:pointer;">
+                        <span class="icon">📋</span>
+                        <h3 class="feature-title">Gerenciador de Pendências</h3>
+                        <p class="feature-description">Controle completo de ordens de serviço, prazos e responsáveis com interface intuitiva.</p>
+                        <span class="feature-status active">Ativo</span>
+                        <button class="btn-access" type="button" onclick="event.stopPropagation(); window.location.href='./pendencias.html';">Acessar Sistema</button>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="icon">📈</span>
+                        <h3 class="feature-title">Análise de Pendências</h3>
+                        <p class="feature-description">Visualize gráficos, tendências e métricas de suas pendências em tempo real.</p>
+                        <span class="feature-status">Desenvolvendo</span>
+                        <button class="btn-access btn-disabled" type="button" disabled>Em Breve</button>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="icon">🔔</span>
+                        <h3 class="feature-title">Notificações Inteligentes</h3>
+                        <p class="feature-description">Receba alertas automáticos sobre pendências atrasadas e próximas do vencimento.</p>
+                        <span class="feature-status">Desenvolvendo</span>
+                        <button class="btn-access btn-disabled" type="button" disabled>Em Breve</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="faturamento-tab" class="tab-content">
+                <div class="empty-state">
+                    <div class="empty-icon">💰</div>
+                    <h3 class="empty-title">Pendências Faturamento</h3>
+                    <p class="empty-text">Este módulo está em desenvolvimento e em breve estará disponível com funcionalidades completas para gerenciar faturamento, faturas pendentes e análises financeiras.</p>
+                </div>
+            </div>
+
+            <div id="cronogramas-tab" class="tab-content">
+                <div class="empty-state">
+                    <div class="empty-icon">📅</div>
+                    <h3 class="empty-title">Cronogramas</h3>
+                    <p class="empty-text">Ferramentas avançadas de cronogramas estão sendo desenvolvidas. Em breve você terá acesso a calendários, planejamento de projetos e linha do tempo interativa.</p>
+                </div>
+            </div>
+
+            <div class="footer">
+                <p>© 2025 Super Controle • Versão Beta • Todos os direitos reservados</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const btnPendencias = document.getElementById('btn-pendencias');
+            const btnFaturamento = document.getElementById('btn-faturamento');
+            const btnCronogramas = document.getElementById('btn-cronogramas');
+
+            const tabPendencias = document.getElementById('pendencias-tab');
+            const tabFaturamento = document.getElementById('faturamento-tab');
+            const tabCronogramas = document.getElementById('cronogramas-tab');
+
+            const allButtons = [btnPendencias, btnFaturamento, btnCronogramas];
+            const allTabs = [tabPendencias, tabFaturamento, tabCronogramas];
+
+            function hideAllTabs() {
+                allTabs.forEach(tab => tab.classList.remove('active'));
+                allButtons.forEach(btn => btn.classList.remove('active'));
+            }
+
+            btnPendencias.addEventListener('click', function() {
+                hideAllTabs();
+                tabPendencias.classList.add('active');
+                this.classList.add('active');
+            });
+
+            btnFaturamento.addEventListener('click', function() {
+                hideAllTabs();
+                tabFaturamento.classList.add('active');
+                this.classList.add('active');
+            });
+
+            btnCronogramas.addEventListener('click', function() {
+                hideAllTabs();
+                tabCronogramas.classList.add('active');
+                this.classList.add('active');
+            });
+        })();
+    </script>
+</body>
+</html>
