@@ -45,6 +45,9 @@
         console.log('✅ Firebase inicializado com sucesso!');
     </script>
     
+    <!-- jsPDF para gerar PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         
@@ -200,11 +203,37 @@
             text-transform: uppercase;
             letter-spacing: 1.5px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-right: 10px;
         }
 
         .btn-email:hover {
             transform: translateY(-3px) scale(1.02);
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-feature {
+            background: linear-gradient(135deg, #0066cc 0%, #004999 100%);
+            color: white;
+            padding: 18px 35px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 15px;
+            transition: all 0.4s;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            box-shadow: 0 10px 30px rgba(0, 102, 204, 0.2);
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-feature:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 102, 204, 0.3);
         }
 
         .form-grid {
@@ -728,6 +757,16 @@
             box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
         }
 
+        .btn-todo {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: white;
+        }
+
+        .btn-todo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 120, 212, 0.3);
+        }
+
         .empty-state {
             text-align: center;
             padding: 80px 20px;
@@ -979,6 +1018,36 @@
 
         .required { color: #dc3545; }
 
+        .feature-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .ms-todo-config {
+            background: linear-gradient(135deg, rgba(0, 120, 212, 0.05), rgba(255, 255, 255, 0.95));
+            border: 2px solid #0078d4;
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+
+        .ms-todo-config h4 {
+            color: #0078d4;
+            font-weight: 800;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ms-todo-config p {
+            color: #495057;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
         @media (max-width: 768px) {
             .header h1 { font-size: 2.2em; }
             .form-grid { grid-template-columns: 1fr; }
@@ -993,6 +1062,8 @@
             .modal-confirm-icon { font-size: 60px; }
             .modal-confirm-buttons { flex-direction: column; }
             .pendencia-header-card { flex-direction: column; }
+            .feature-buttons { flex-direction: column; }
+            .btn-feature { width: 100%; }
         }
     </style>
 </head>
@@ -1008,7 +1079,15 @@
             <p>Digite o email que deseja receber notificações de pendências atrasadas</p>
             <div style="font-size: 13px; color: #6c757d; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">💡 <span>O email será salvo automaticamente</span></div>
             <input type="email" id="emailDestino" class="config-input" placeholder="exemplo@email.com" required>
-            <button class="btn-email" onclick="enviarAlertaPendencias()">📤 Enviar Alerta Agora</button>
+            <div class="feature-buttons">
+                <button class="btn-email" onclick="enviarAlertaPendencias()">📤 Enviar Alerta</button>
+                <button class="btn-feature" onclick="gerarRelatorioPDF()">📄 Gerar Relatório PDF</button>
+            </div>
+
+            <div class="ms-todo-config">
+                <h4>📋 Microsoft To Do</h4>
+                <p>Clique em "📋 To Do" na pendência, ela abrirá no To Do com os dados copiados. Cole com Ctrl+V</p>
+            </div>
         </div>
 
         <div class="glass-card">
@@ -1218,6 +1297,165 @@
             publicKey: 'SemwnDhUgHqJ1l0VG'
         };
 
+        emailjs.init(EMAIL_CONFIG.publicKey);
+
+        // ===== MICROSOFT TO DO =====
+async function adicionarAoToDo(idPendencia) {
+    try {
+        const pendencia = pendencias.find(p => p.id === idPendencia);
+        if (!pendencia) return;
+
+        const textoCompleto = `O.S ${pendencia.numeroOS} - ${pendencia.cliente} | Responsável: ${pendencia.responsavel} | Tipo: ${pendencia.tipoPendencia} | Prazo: ${formatarData(pendencia.dataPrazo)}${pendencia.descricao ? ` | Descrição: ${pendencia.descricao}` : ''}`;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(textoCompleto);
+            mostrarNotificacao('✅ Copiado! Abrindo To Do...', 'success');
+        } else {
+            const textarea = document.createElement('textarea');
+            textarea.value = textoCompleto;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            mostrarNotificacao('✅ Copiado! Abrindo To Do...', 'success');
+        }
+
+        setTimeout(() => {
+            window.open('https://to-do.office.com', '_blank');
+        }, 300);
+
+    } catch (error) {
+        console.error('Erro:', error);
+        mostrarNotificacao('❌ Erro ao copiar', 'error');
+    }
+}
+
+
+        // ===== RELATÓRIO PDF =====
+        function gerarRelatorioPDF() {
+            try {
+                const pendenciasParaRelatorio = pendenciasAtivasFiltradas.length > 0 ? 
+                    pendenciasAtivasFiltradas : pendencias;
+
+                if (pendenciasParaRelatorio.length === 0) {
+                    mostrarNotificacao('❌ Nenhuma pendência para gerar relatório', 'error');
+                    return;
+                }
+
+                const dataAtual = new Date();
+                const dataFormatada = dataAtual.toLocaleDateString('pt-BR');
+                const horaFormatada = dataAtual.toLocaleTimeString('pt-BR');
+
+                let conteudoHTML = `
+                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                        <h1 style="text-align: center; border-bottom: 3px solid #212529; padding-bottom: 10px;">
+                            📊 RELATÓRIO DE PENDÊNCIAS
+                        </h1>
+                        
+                        <p style="text-align: center; color: #666; margin: 10px 0;">
+                            <strong>Data de Geração:</strong> ${dataFormatada} às ${horaFormatada}
+                        </p>
+                        
+                        <hr style="border: 1px solid #ddd; margin: 20px 0;">
+                        
+                        <h2 style="color: #212529; border-left: 4px solid #212529; padding-left: 10px;">
+                            📈 RESUMO EXECUTIVO
+                        </h2>
+                        
+                        <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                            <tr style="background-color: #f0f0f0;">
+                                <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold;">Total de Pendências</td>
+                                <td style="border: 1px solid #ddd; padding: 10px;">${pendenciasParaRelatorio.length}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold;">🔴 Atrasadas</td>
+                                <td style="border: 1px solid #ddd; padding: 10px; color: #dc3545; font-weight: bold;">
+                                    ${pendenciasParaRelatorio.filter(p => getStatusPorData(p) === 'vencida').length}
+                                </td>
+                            </tr>
+                            <tr style="background-color: #f0f0f0;">
+                                <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold;">🟡 No Prazo</td>
+                                <td style="border: 1px solid #ddd; padding: 10px; color: #ffc107; font-weight: bold;">
+                                    ${pendenciasParaRelatorio.filter(p => getStatusPorData(p) === 'futura').length}
+                                </td>
+                            </tr>
+                        </table>
+
+                        <h2 style="color: #212529; border-left: 4px solid #212529; padding-left: 10px; margin-top: 30px;">
+                            📋 DETALHAMENTO DAS PENDÊNCIAS
+                        </h2>
+                `;
+
+                pendenciasParaRelatorio.forEach((p, index) => {
+                    const status = getStatusPorData(p);
+                    const corStatus = status === 'vencida' ? '#dc3545' : '#ffc107';
+                    const textoStatus = status === 'vencida' ? 'ATRASADA' : 'NO PRAZO';
+
+                    conteudoHTML += `
+                        <div style="border: 1px solid #ddd; padding: 15px; margin: 15px 0; border-radius: 8px;">
+                            <h3 style="margin: 0 0 10px 0; color: #212529;">
+                                ${index + 1}. O.S <strong>${p.numeroOS}</strong> - ${p.cliente}
+                            </h3>
+                            
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="border: 1px solid #eee; padding: 8px; font-weight: bold; width: 25%;">Status</td>
+                                    <td style="border: 1px solid #eee; padding: 8px; color: ${corStatus}; font-weight: bold;">
+                                        ${textoStatus}
+                                    </td>
+                                </tr>
+                                <tr style="background-color: #f9f9f9;">
+                                    <td style="border: 1px solid #eee; padding: 8px; font-weight: bold;">Responsável</td>
+                                    <td style="border: 1px solid #eee; padding: 8px;">${p.responsavel}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #eee; padding: 8px; font-weight: bold;">Tipo</td>
+                                    <td style="border: 1px solid #eee; padding: 8px;">${p.tipoPendencia}</td>
+                                </tr>
+                                <tr style="background-color: #f9f9f9;">
+                                    <td style="border: 1px solid #eee; padding: 8px; font-weight: bold;">Data Prazo</td>
+                                    <td style="border: 1px solid #eee; padding: 8px;">${formatarData(p.dataPrazo)}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #eee; padding: 8px; font-weight: bold;">Descrição</td>
+                                    <td style="border: 1px solid #eee; padding: 8px;">${p.descricao || 'N/A'}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    `;
+                });
+
+                conteudoHTML += `
+                        <hr style="border: 1px solid #ddd; margin: 30px 0;">
+                        <p style="text-align: center; color: #999; font-size: 12px;">
+                            Relatório gerado automaticamente pelo Sistema de Pendências
+                        </p>
+                    </div>
+                `;
+
+                const element = document.createElement('div');
+                element.innerHTML = conteudoHTML;
+
+                const opt = {
+                    margin: 10,
+                    filename: `Relatorio_Pendencias_${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+                };
+
+                html2pdf().set(opt).from(element).save();
+                
+                mostrarNotificacao('✅ PDF gerado com sucesso!');
+            } catch (error) {
+                console.error('Erro ao gerar PDF:', error);
+                mostrarNotificacao('❌ Erro ao gerar PDF', 'error');
+            }
+        }
+
+        // ===== FIREBASE =====
         function carregarPendenciasFirebase() {
             const pendenciasRef = window.firebaseRef(window.firebaseDB, 'pendencias');
             
@@ -1382,7 +1620,6 @@
             let ativas = pendencias.filter(p => p.status === 'pendente');
             let concluidas = pendencias.filter(p => p.status === 'concluida');
             
-            // NOVO: Filtro por O.S
             if (filtroOSAtivo) {
                 ativas = ativas.filter(p => String(p.numeroOS).includes(filtroOSAtivo));
                 concluidas = concluidas.filter(p => String(p.numeroOS).includes(filtroOSAtivo));
@@ -1656,6 +1893,7 @@
                     ${p.descricao ? `<div class="pendencia-descricao">📝 ${p.descricao}</div>` : ''}
                     
                     <div class="pendencia-actions">
+                        <button class="btn-small btn-todo" onclick="adicionarAoToDo('${p.id}')">📋 To Do</button>
                         <button class="btn-small btn-info" onclick="abrirModalEdicao('${p.id}')">✏️ Editar</button>
                         ${p.status === 'pendente' ? 
                             `<button class="btn-small btn-success" onclick="concluirPendencia('${p.id}')">✓ Concluir</button>` : 
@@ -1703,7 +1941,6 @@
             
             localStorage.setItem('emailDestino', emailDestino);
 
-            // NOVO: Usa as pendências FILTRADAS em vez de todas as atrasadas
             const pendenciasParaEnviar = pendenciasAtivasFiltradas.filter(p => 
                 getStatusPorData(p) === 'vencida'
             );
