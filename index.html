@@ -5,6 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Controle - Dashboard</title>
     
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAz0AnZ_-IImzWZioHy940uukfpFlZVR2o",
+            authDomain: "planilha-suprema-5bd7f.firebaseapp.com",
+            databaseURL: "https://planilha-suprema-5bd7f-default-rtdb.firebaseio.com",
+            projectId: "planilha-suprema-5bd7f",
+            storageBucket: "planilha-suprema-5bd7f.firebasestorage.app",
+            messagingSenderId: "760644555297",
+            appId: "1:760644555297:web:c538ac1e23df00f5af0960"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        window.firebaseDB = database;
+        window.firebaseRef = ref;
+        window.firebaseOnValue = onValue;
+    </script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
         
@@ -173,6 +195,9 @@
             transition: all 0.4s ease;
             border: 2px solid #e0e0e0;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .feature-card:hover {
@@ -220,6 +245,7 @@
             line-height: 1.6;
             font-weight: 400;
             margin-bottom: 20px;
+            flex-grow: 1;
         }
 
         .feature-status {
@@ -232,6 +258,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
+            margin-bottom: 20px;
         }
 
         .feature-status.active {
@@ -251,9 +278,9 @@
             transition: all 0.4s ease;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-top: 20px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             display: inline-block;
+            width: 100%;
         }
 
         .btn-access:hover {
@@ -373,15 +400,15 @@
             <div id="pendencias-tab" class="tab-content active">
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-number">42</div>
+                        <div class="stat-number" id="stat-ativas">0</div>
                         <div class="stat-label">Pendências Ativas</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">8</div>
+                        <div class="stat-number" id="stat-atrasadas">0</div>
                         <div class="stat-label">Atrasadas</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">156</div>
+                        <div class="stat-number" id="stat-concluidas">0</div>
                         <div class="stat-label">Concluídas</div>
                     </div>
                 </div>
@@ -402,7 +429,6 @@
                         <span class="feature-status active">Ativo</span>
                         <button class="btn-access" type="button" onclick="event.stopPropagation(); window.location.href='./analise-pendencias.html';">Acessar Sistema</button>
                     </div>
-
 
                     <div class="feature-card">
                         <span class="icon">🔔</span>
@@ -437,6 +463,29 @@
     </div>
 
     <script>
+        // Carregar dados em tempo real
+        function carregarDadosFirebase() {
+            const pendenciasRef = window.firebaseRef(window.firebaseDB, 'pendencias');
+            window.firebaseOnValue(pendenciasRef, (snapshot) => {
+                const pendencias = [];
+                snapshot.forEach((child) => {
+                    pendencias.push({ id: child.key, ...child.val() });
+                });
+
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+
+                const ativas = pendencias.filter(p => p.status === 'pendente');
+                const atrasadas = ativas.filter(p => new Date(p.dataPrazo + 'T00:00:00') < hoje);
+                const concluidas = pendencias.filter(p => p.status === 'concluida');
+
+                document.getElementById('stat-ativas').textContent = ativas.length;
+                document.getElementById('stat-atrasadas').textContent = atrasadas.length;
+                document.getElementById('stat-concluidas').textContent = concluidas.length;
+            });
+        }
+
+        // Tabs
         (function() {
             const btnPendencias = document.getElementById('btn-pendencias');
             const btnFaturamento = document.getElementById('btn-faturamento');
@@ -472,6 +521,9 @@
                 this.classList.add('active');
             });
         })();
+
+        // Carrega dados ao iniciar
+        setTimeout(() => carregarDadosFirebase(), 1000);
     </script>
 </body>
 </html>
