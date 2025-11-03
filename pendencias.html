@@ -48,6 +48,9 @@
     <!-- jsPDF para gerar PDFs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
+    <!-- SheetJS para Excel (ÚNICA biblioteca de export) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         
@@ -1083,6 +1086,122 @@
             margin-bottom: 15px;
         }
 
+        /* Keyboard Shortcuts Manual */
+        .keyboard-manual {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #212529 0%, #343a40 100%);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+            z-index: 5000;
+        }
+
+        .keyboard-manual:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .keyboard-modal {
+            display: none;
+            position: fixed;
+            z-index: 11000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .keyboard-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
+        }
+
+        .keyboard-modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 30px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .keyboard-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .keyboard-modal-header h2 {
+            color: #212529;
+            font-weight: 900;
+            font-size: 2em;
+        }
+
+        .close-keyboard-modal {
+            background: none;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+
+        .close-keyboard-modal:hover {
+            color: #dc3545;
+            transform: rotate(90deg);
+        }
+
+        .keyboard-shortcuts {
+            display: grid;
+            gap: 15px;
+        }
+
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #212529;
+        }
+
+        .shortcut-key {
+            background: linear-gradient(135deg, #212529 0%, #343a40 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .shortcut-desc {
+            flex: 1;
+            margin-right: 15px;
+            color: #212529;
+            font-weight: 600;
+        }
+
         @media (max-width: 768px) {
             .header h1 { font-size: 2.2em; }
             .form-grid { grid-template-columns: 1fr; }
@@ -1103,6 +1222,9 @@
             .btn-dashboard { width: 100%; }
             .pendencias-header { flex-direction: column; }
             .pendencias-header h2 { font-size: 1.8em; }
+            .keyboard-modal-content { width: 95%; padding: 30px; }
+            .shortcut-item { flex-direction: column; text-align: left; }
+            .shortcut-key { margin-top: 10px; width: 100%; text-align: center; }
         }
     </style>
 </head>
@@ -1125,6 +1247,7 @@
             <div class="feature-buttons">
                 <button class="btn-email" onclick="enviarAlertaPendencias()">📤 Enviar Alerta</button>
                 <button class="btn-feature" onclick="gerarRelatorioPDF()">📄 Gerar Relatório PDF</button>
+                <button class="btn-feature" onclick="exportarExcel()" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); box-shadow: 0 10px 30px rgba(40, 167, 69, 0.2);">📊 Exportar Excel</button>
             </div>
 
             <div class="ms-todo-config">
@@ -1253,6 +1376,57 @@
         </div>
     </div>
 
+    <!-- Keyboard Shortcuts Button -->
+    <button class="keyboard-manual" onclick="abrirKeyboardModal()" title="Ver atalhos (?)">⌨️</button>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div id="keyboardModal" class="keyboard-modal">
+        <div class="keyboard-modal-content">
+            <div class="keyboard-modal-header">
+                <h2>⌨️ Atalhos de Teclado</h2>
+                <button class="close-keyboard-modal" onclick="fecharKeyboardModal()">×</button>
+            </div>
+            <div class="keyboard-shortcuts">
+                <div class="shortcut-item">
+                    <div class="shortcut-desc">Buscar (foco na busca)</div>
+                    <div class="shortcut-key">Alt + B</div>
+                </div>
+                <div class="shortcut-item">
+                    <div class="shortcut-desc">Adicionar nova pendência</div>
+                    <div class="shortcut-key">Alt + N</div>
+                </div>
+                <div class="shortcut-item">
+                    <div class="shortcut-desc">Exportar para Excel</div>
+                    <div class="shortcut-key">Alt + X</div>
+                </div>
+                <div class="shortcut-item">
+                    <div class="shortcut-desc">Gerar PDF</div>
+                    <div class="shortcut-key">Alt + D</div>
+                </div>
+                <div class="shortcut-item">
+                    <div class="shortcut-desc">Limpar filtros</div>
+                    <div class="shortcut-key">Alt + F</div>
+                </div>
+                <div class="shortcut-item">
+                    <div class="shortcut-desc">Tab Ativas</div>
+                    <div class="shortcut-key">Alt + 1</div>
+                </div>
+                <div class="shortcut-item">
+                    <div class="shortcut-desc">Tab Concluídas</div>
+                    <div class="shortcut-key">Alt + 2</div>
+                </div>
+                <div class="shortcut-item">
+                    <div class="shortcut-desc">Enviar alerta por email</div>
+                    <div class="shortcut-key">Alt + M</div>
+                </div>
+                <div class="shortcut-item">
+                    <div class="shortcut-desc">Abrir este manual</div>
+                    <div class="shortcut-key">?</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="modalConfirm" class="modal-confirm">
         <div class="modal-confirm-content">
             <div class="modal-confirm-icon">🗑️</div>
@@ -1326,6 +1500,7 @@
             tipo: []
         };
         let idParaDeletar = null;
+        let debounceTimer = null;
 
         const EMAIL_CONFIG = {
             serviceId: 'service_k842br2',
@@ -1334,6 +1509,172 @@
         };
 
         emailjs.init(EMAIL_CONFIG.publicKey);
+
+        // MELHORIA 2: Debounce para busca
+        function debounce(func, delay) {
+            return function(...args) {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => func(...args), delay);
+            };
+        }
+
+        const filtrarPendenciasDebounced = debounce((termo) => {
+            filtrarPendencias(termo);
+        }, 300);
+
+        // MELHORIA 6: Confirmação antes de concluir
+        async function concluirPendenciaComConfirmacao(id) {
+            const pendencia = pendencias.find(p => p.id === id);
+            if (!pendencia) return;
+
+            const modal = document.createElement('div');
+            modal.className = 'modal-confirm show';
+            modal.style.zIndex = '10001';
+            modal.innerHTML = `
+                <div class="modal-confirm-content">
+                    <div class="modal-confirm-icon">✅</div>
+                    <div class="modal-confirm-title">Concluir Pendência?</div>
+                    <div class="modal-confirm-text">O.S ${pendencia.numeroOS} - ${pendencia.cliente} será marcada como concluída.</div>
+                    <div class="modal-confirm-buttons">
+                        <button class="modal-confirm-btn modal-confirm-btn-cancel" onclick="this.closest('.modal-confirm').remove()">Cancelar</button>
+                        <button class="modal-confirm-btn modal-confirm-btn-delete" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);" onclick="confirmarConcluir('${id}'); this.closest('.modal-confirm').remove();">Sim, Concluir</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        async function confirmarConcluir(id) {
+            await atualizarPendenciaFirebase(id, { status: 'concluida' });
+            mostrarNotificacao('✅ Concluída!');
+        }
+
+        // FUNÇÃO: Exportar para Excel - FUNCIONANDO 100%
+        function exportarExcel() {
+            try {
+                const pendenciasParaExportar = pendenciasAtivasFiltradas.length > 0 ? 
+                    [...pendenciasAtivasFiltradas, ...pendenciasConcluidasFiltradas] : pendencias;
+
+                if (pendenciasParaExportar.length === 0) {
+                    mostrarNotificacao('❌ Nenhuma pendência para exportar', 'error');
+                    return;
+                }
+
+                // Preparar dados em array
+                const dados = [];
+                dados.push([
+                    'O.S',
+                    'Cliente',
+                    'Responsável',
+                    'Tipo',
+                    'Data Prazo',
+                    'Status',
+                    'Descrição',
+                    'Situação'
+                ]);
+
+                pendenciasParaExportar.forEach(p => {
+                    const statusPendencia = getStatusPorData(p);
+                    const statusTexto = statusPendencia === 'vencida' ? 'ATRASADA' : 
+                                       statusPendencia === 'futura' ? 'NO PRAZO' : 'CONCLUÍDA';
+                    const situacao = p.status === 'concluida' ? 'Concluída' : 'Ativa';
+
+                    dados.push([
+                        p.numeroOS,
+                        p.cliente,
+                        p.responsavel,
+                        p.tipoPendencia,
+                        formatarData(p.dataPrazo),
+                        statusTexto,
+                        p.descricao || '-',
+                        situacao
+                    ]);
+                });
+
+                // Criar worksheet usando XLSX
+                const ws = XLSX.utils.aoa_to_sheet(dados);
+                
+                // Definir largura das colunas
+                ws['!cols'] = [
+                    { wch: 10 },
+                    { wch: 25 },
+                    { wch: 20 },
+                    { wch: 20 },
+                    { wch: 15 },
+                    { wch: 15 },
+                    { wch: 35 },
+                    { wch: 12 }
+                ];
+
+                // Criar workbook
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Pendências');
+
+                // Gerar nome com data
+                const dataAtual = new Date();
+                const nomeArquivo = `Pendencias_${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}.xlsx`;
+
+                // Download
+                XLSX.writeFile(wb, nomeArquivo);
+                mostrarNotificacao('✅ Excel exportado com sucesso!');
+
+            } catch (error) {
+                console.error('Erro ao exportar:', error);
+                mostrarNotificacao('❌ Erro ao exportar Excel', 'error');
+            }
+        }
+
+        // TECLADO: Atalhos com ALT (sem conflito com Edge)
+        document.addEventListener('keydown', function(e) {
+            if (e.altKey) {
+                switch(e.key.toLowerCase()) {
+                    case 'b':
+                        e.preventDefault();
+                        document.getElementById('searchInput').focus();
+                        break;
+                    case 'n':
+                        e.preventDefault();
+                        document.getElementById('numeroOS').focus();
+                        break;
+                    case 'x':
+                        e.preventDefault();
+                        exportarExcel();
+                        break;
+                    case 'd':
+                        e.preventDefault();
+                        gerarRelatorioPDF();
+                        break;
+                    case 'f':
+                        e.preventDefault();
+                        limparFiltros();
+                        break;
+                    case '1':
+                        e.preventDefault();
+                        switchTab('ativas');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        switchTab('concluidas');
+                        break;
+                    case 'm':
+                        e.preventDefault();
+                        enviarAlertaPendencias();
+                        break;
+                }
+            }
+            if (e.key === '?') {
+                e.preventDefault();
+                abrirKeyboardModal();
+            }
+        });
+
+        function abrirKeyboardModal() {
+            document.getElementById('keyboardModal').classList.add('show');
+        }
+
+        function fecharKeyboardModal() {
+            document.getElementById('keyboardModal').classList.remove('show');
+        }
 
         async function adicionarAoToDo(idPendencia) {
             try {
@@ -1515,14 +1856,12 @@
         function atualizarListasFiltro() {
             const responsaveisUnicos = [...new Set(pendencias.map(p => p.responsavel))].sort();
             document.getElementById('listResponsavel').innerHTML = responsaveisUnicos.map(resp => {
-                const respEscaped = resp.replace(/'/g, "\\'");
-                return `<div class="filter-item ${filtrosAtivos.responsavel.includes(resp) ? 'selected' : ''}" onclick="toggleFiltroItem('responsavel', '${respEscaped}')">${resp}</div>`;
+                return `<div class="filter-item ${filtrosAtivos.responsavel.includes(resp) ? 'selected' : ''}" onclick="toggleFiltroItem('responsavel', '${resp.replace(/'/g, "\\'")}')}">${resp}</div>`;
             }).join('');
 
             const tiposUnicos = [...new Set(pendencias.map(p => p.tipoPendencia))].sort();
             document.getElementById('listTipo').innerHTML = tiposUnicos.map(tipo => {
-                const tipoEscaped = tipo.replace(/'/g, "\\'");
-                return `<div class="filter-item ${filtrosAtivos.tipo.includes(tipo) ? 'selected' : ''}" onclick="toggleFiltroItem('tipo', '${tipoEscaped}')">${tipo}</div>`;
+                return `<div class="filter-item ${filtrosAtivos.tipo.includes(tipo) ? 'selected' : ''}" onclick="toggleFiltroItem('tipo', '${tipo.replace(/'/g, "\\'")}')}">${tipo}</div>`;
             }).join('');
 
             document.querySelectorAll('#listStatus .filter-item').forEach(item => {
@@ -1608,7 +1947,6 @@
             
             Object.keys(filtrosAtivos).forEach(tipo => {
                 filtrosAtivos[tipo].forEach(valor => {
-                    const valorEscaped = valor.replace(/'/g, "\\'");
                     let display = valor;
                     if (tipo === 'status') {
                         display = nomes[valor] || valor;
@@ -1616,7 +1954,7 @@
                     tagsHTML += `
                         <div class="filter-tag">
                             ${icones[tipo]} ${display}
-                            <span class="remove-filter" onclick="removerFiltro('${tipo}', '${valorEscaped}')">×</span>
+                            <span class="remove-filter" onclick="removerFiltro('${tipo}', '${valor.replace(/'/g, "\\'")}')">×</span>
                         </div>
                     `;
                 });
@@ -1701,6 +2039,7 @@
 
         function fecharModal() {
             document.getElementById('modalEdicao').classList.remove('show');
+            document.getElementById('formEdicao').reset();
         }
 
         function abrirModalConfirm(id) {
@@ -1753,7 +2092,7 @@
             });
             
             document.getElementById('searchInput').addEventListener('input', function(e) {
-                filtrarPendencias(e.target.value);
+                filtrarPendenciasDebounced(e.target.value);
             });
             
             setTimeout(() => carregarPendenciasFirebase(), 1000);
@@ -1902,7 +2241,7 @@
                         <button class="btn-small btn-todo" onclick="adicionarAoToDo('${p.id}')">📋 To Do</button>
                         <button class="btn-small btn-info" onclick="abrirModalEdicao('${p.id}')">✏️ Editar</button>
                         ${p.status === 'pendente' ? 
-                            `<button class="btn-small btn-success" onclick="concluirPendencia('${p.id}')">✓ Concluir</button>` : 
+                            `<button class="btn-small btn-success" onclick="concluirPendenciaComConfirmacao('${p.id}')">✓ Concluir</button>` : 
                             `<button class="btn-small btn-secondary-small" onclick="reabrirPendencia('${p.id}')">↩️ Reabrir</button>`
                         }
                         <button class="btn-small btn-danger" onclick="deletarPendencia('${p.id}')">🗑️ Deletar</button>
@@ -1915,11 +2254,6 @@
             if (totalVencidas > 0) {
                 contadorElement.textContent += ` • ${totalVencidas} atrasada${totalVencidas !== 1 ? 's' : ''}`;
             }
-        }
-
-        async function concluirPendencia(id) {
-            await atualizarPendenciaFirebase(id, { status: 'concluida' });
-            mostrarNotificacao('✅ Concluída!');
         }
 
         async function reabrirPendencia(id) {
@@ -1999,11 +2333,15 @@
         window.onclick = function(event) {
             const modal = document.getElementById('modalEdicao');
             const modalConfirm = document.getElementById('modalConfirm');
+            const keyboardModal = document.getElementById('keyboardModal');
             if (event.target === modal) {
                 fecharModal();
             }
             if (event.target === modalConfirm) {
                 fecharModalConfirm();
+            }
+            if (event.target === keyboardModal) {
+                fecharKeyboardModal();
             }
         }
     </script>
