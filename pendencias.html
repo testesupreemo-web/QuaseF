@@ -2298,46 +2298,73 @@
         }
 
         function enviarAlertaPendencias() {
-            const emailDestino = document.getElementById('emailDestino').value.trim();
-            
-            if (!emailDestino || !validarEmail(emailDestino)) {
-                mostrarNotificacao('❌ Email inválido!', 'error');
-                return;
+    const emailDestino = document.getElementById('emailDestino').value.trim();
+    
+    if (!emailDestino || !validarEmail(emailDestino)) {
+        mostrarNotificacao('❌ Email inválido!', 'error');
+        return;
+    }
+    
+    localStorage.setItem('emailDestino', emailDestino);
+
+    // Modifiquei aqui para incluir tanto atrasadas quanto no prazo
+    const pendenciasParaEnviar = pendenciasAtivasFiltradas.filter(p => {
+        const status = getStatusPorData(p);
+        return status === 'vencida' || status === 'futura'; // Atrasada OU No Prazo
+    });
+
+    if (pendenciasParaEnviar.length === 0) {
+        mostrarNotificacao('✅ Nenhuma pendência ativa!', 'success');
+        return;
+    }
+
+    // Separar por status para organização
+    const atrasadas = pendenciasParaEnviar.filter(p => getStatusPorData(p) === 'vencida');
+    const noPrazo = pendenciasParaEnviar.filter(p => getStatusPorData(p) === 'futura');
+
+    let listaPendencias = '';
+
+    // Seção de atrasadas
+    if (atrasadas.length > 0) {
+        listaPendencias += '🔴 ATRASADAS:\n';
+        atrasadas.forEach((p, index) => {
+            listaPendencias += `${index + 1}. O.S ${p.numeroOS} - ${p.cliente}\n`;
+            if (p.descricao && p.descricao.trim()) {
+                listaPendencias += `   💬 ${p.descricao}\n`;
             }
-            
-            localStorage.setItem('emailDestino', emailDestino);
+            listaPendencias += `\n`;
+        });
+        listaPendencias += `\n`;
+    }
 
-            const pendenciasParaEnviar = pendenciasAtivasFiltradas.filter(p => 
-                getStatusPorData(p) === 'vencida'
-            );
-
-            if (pendenciasParaEnviar.length === 0) {
-                mostrarNotificacao('✅ Nenhuma atrasada!', 'success');
-                return;
+    // Seção no prazo
+    if (noPrazo.length > 0) {
+        listaPendencias += '🟡 NO PRAZO:\n';
+        noPrazo.forEach((p, index) => {
+            listaPendencias += `${index + 1}. O.S ${p.numeroOS} - ${p.cliente}\n`;
+            if (p.descricao && p.descricao.trim()) {
+                listaPendencias += `   💬 ${p.descricao}\n`;
             }
+            listaPendencias += `\n`;
+        });
+    }
 
-            let listaPendencias = '';
-            pendenciasParaEnviar.forEach((p, index) => {
-                listaPendencias += `${index + 1}. O.S ${p.numeroOS} - ${p.cliente}\n`;
-                if (p.descricao && p.descricao.trim()) {
-                    listaPendencias += `   💬 ${p.descricao}\n`;
-                }
-                listaPendencias += `\n`;
-            });
+    const templateParams = {
+        to_email: emailDestino,
+        total_atrasadas: atrasadas.length,
+        total_no_prazo: noPrazo.length,
+        total_pendencias: pendenciasParaEnviar.length,
+        pendencias_lista: listaPendencias,
+        data_envio: new Date().toLocaleString('pt-BR')
+    };
 
-            const templateParams = {
-                to_email: emailDestino,
-                total_atrasadas: pendenciasParaEnviar.length,
-                pendencias_lista: listaPendencias,
-                data_envio: new Date().toLocaleString('pt-BR')
-            };
+    mostrarNotificacao('📤 Enviando...', 'info');
 
-            mostrarNotificacao('📤 Enviando...', 'info');
+    emailjs.send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, templateParams)
+        .then(() => mostrarNotificacao(`✅ Alerta enviado! (${atrasadas.length} atrasadas + ${noPrazo.length} no prazo)`))
+        .catch(() => mostrarNotificacao('❌ Erro no email', 'error'));
+}
 
-            emailjs.send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, templateParams)
-                .then(() => mostrarNotificacao(`✅ Enviado!`))
-                .catch(() => mostrarNotificacao('❌ Erro no email', 'error'));
-        }
 
         function mostrarNotificacao(mensagem, tipo = 'success') {
             const cores = {
