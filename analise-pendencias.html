@@ -263,6 +263,11 @@
             font-weight: 700;
         }
 
+        .status-atrasada-concluida {
+            color: #ff9800;
+            font-weight: 700;
+        }
+
         .description-row {
             display: none;
             background: #f9f9f9;
@@ -353,6 +358,10 @@
                     <div class="stat-number" id="totalConcluidas">0</div>
                     <div class="stat-label">Concluídas</div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalConcluidasAtraso">0</div>
+                    <div class="stat-label">Concluídas com Atraso</div>
+                </div>
             </div>
 
             <!-- Gráficos -->
@@ -391,6 +400,24 @@
             </div>
 
             <div class="table-container">
+                <h3>⚠️ O.S Concluídas com Atraso</h3>
+                <table id="tabelaConcluidasAtraso">
+                    <thead>
+                        <tr>
+                            <th>O.S</th>
+                            <th>Cliente</th>
+                            <th>Responsável</th>
+                            <th>Tipo</th>
+                            <th>Prazo</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bodyConcluidasAtraso"></tbody>
+                </table>
+                <p id="semConcluidasAtraso" class="empty-message" style="display: none;">Nenhuma O.S concluída com atraso 🎉</p>
+            </div>
+
+            <div class="table-container">
                 <h3>✅ O.S Concluídas a Tempo</h3>
                 <table id="tabelaConcluidas">
                     <thead>
@@ -418,28 +445,11 @@
         let pendencias = [];
         let chartStatus, chartResponsavel, chartTipo;
 
-        // Paleta de cores diversificadas
         const coresPaleta = [
-            '#9c27b0', // Roxo
-            '#00bcd4', // Ciano
-            '#ff9800', // Laranja
-            '#4caf50', // Verde
-            '#e91e63', // Pink
-            '#3f51b5', // Indigo
-            '#ff5722', // Laranja escuro
-            '#009688', // Teal
-            '#ffc107', // Amarelo
-            '#795548', // Marrom
-            '#607d8b', // Azul cinza
-            '#f44336', // Vermelho
-            '#8bc34a', // Verde claro
-            '#cddc39', // Lima
-            '#673ab7', // Roxo profundo
-            '#00897b', // Verde oceano
-            '#d32f2f', // Vermelho escuro
-            '#1976d2', // Azul
-            '#c2185b', // Rosa escuro
-            '#7b1fa2'  // Roxo escuro
+            '#9c27b0', '#00bcd4', '#ff9800', '#4caf50', '#e91e63', '#3f51b5',
+            '#ff5722', '#009688', '#ffc107', '#795548', '#607d8b', '#f44336',
+            '#8bc34a', '#cddc39', '#673ab7', '#00897b', '#d32f2f', '#1976d2',
+            '#c2185b', '#7b1fa2'
         ];
 
         function gerarCoresUnicas(quantidade) {
@@ -474,10 +484,16 @@
             const ativas = pendencias.filter(p => p.status === 'pendente');
             const concluidas = pendencias.filter(p => p.status === 'concluida');
             const atrasadas = ativas.filter(p => new Date(p.dataPrazo + 'T00:00:00') < hoje);
+            
+            const concluidasComAtraso = concluidas.filter(p => {
+                const dataPrazo = new Date(p.dataPrazo + 'T00:00:00');
+                return dataPrazo < hoje;
+            });
 
             document.getElementById('totalPendencias').textContent = ativas.length;
             document.getElementById('totalAtrasadas').textContent = atrasadas.length;
             document.getElementById('totalConcluidas').textContent = concluidas.length;
+            document.getElementById('totalConcluidasAtraso').textContent = concluidasComAtraso.length;
         }
 
         function atualizarGraficos() {
@@ -487,6 +503,16 @@
             const ativas = pendencias.filter(p => p.status === 'pendente');
             const concluidas = pendencias.filter(p => p.status === 'concluida');
             const atrasadas = ativas.filter(p => new Date(p.dataPrazo + 'T00:00:00') < hoje);
+            
+            const concluidasComAtraso = concluidas.filter(p => {
+                const dataPrazo = new Date(p.dataPrazo + 'T00:00:00');
+                return dataPrazo < hoje;
+            });
+            
+            const concluidasATempo = concluidas.filter(p => {
+                const dataPrazo = new Date(p.dataPrazo + 'T00:00:00');
+                return dataPrazo >= hoje;
+            });
 
             // Status
             const ctxStatus = document.getElementById('chartStatus').getContext('2d');
@@ -494,15 +520,34 @@
             chartStatus = new Chart(ctxStatus, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Pendentes', 'Concluídas', 'Atrasadas'],
+                    labels: ['Pendentes', 'Concluídas a Tempo', 'Concluídas com Atraso', 'Atrasadas'],
                     datasets: [{
-                        data: [ativas.length - atrasadas.length, concluidas.length, atrasadas.length],
-                        backgroundColor: ['#ffc107', '#28a745', '#dc3545'],
+                        data: [
+                            ativas.length - atrasadas.length,
+                            concluidasATempo.length,
+                            concluidasComAtraso.length,
+                            atrasadas.length
+                        ],
+                        backgroundColor: ['#ffc107', '#28a745', '#ff9800', '#dc3545'],
                         borderColor: '#fff',
                         borderWidth: 2
                     }]
                 },
-                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+                options: { 
+                    responsive: true, 
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12,
+                                    family: 'Poppins'
+                                }
+                            }
+                        } 
+                    } 
+                }
             });
 
             // Responsável
@@ -519,7 +564,7 @@
                 options: { responsive: true, indexAxis: 'y' }
             });
 
-            // Tipo - Com cores únicas
+            // Tipo
             const tipoMap = {};
             pendencias.forEach(p => tipoMap[p.tipoPendencia] = (tipoMap[p.tipoPendencia] || 0) + 1);
             const tiposUnicos = Object.keys(tipoMap);
@@ -546,7 +591,6 @@
             const descRow = document.getElementById('desc-' + rowId);
             const mainRow = document.getElementById('row-' + rowId);
             
-            // Fechar todas as outras descrições
             document.querySelectorAll('.description-row').forEach(row => {
                 if (row.id !== 'desc-' + rowId) {
                     row.classList.remove('show');
@@ -556,7 +600,6 @@
                 }
             });
             
-            // Toggle da linha atual
             if (descRow) {
                 descRow.classList.toggle('show');
                 mainRow.classList.toggle('active');
@@ -573,7 +616,18 @@
             });
 
             const concluidas = pendencias.filter(p => p.status === 'concluida');
+            
+            const concluidasComAtraso = concluidas.filter(p => {
+                const dataPrazo = new Date(p.dataPrazo + 'T00:00:00');
+                return dataPrazo < hoje;
+            });
+            
+            const concluidasATempo = concluidas.filter(p => {
+                const dataPrazo = new Date(p.dataPrazo + 'T00:00:00');
+                return dataPrazo >= hoje;
+            });
 
+            // Tabela de Atraso
             const bodyAtraso = document.getElementById('bodyAtraso');
             const semAtraso = document.getElementById('semAtraso');
             bodyAtraso.innerHTML = '';
@@ -608,15 +662,49 @@
                 });
             }
 
+            // Tabela de Concluídas com Atraso
+            const bodyConcluidasAtraso = document.getElementById('bodyConcluidasAtraso');
+            const semConcluidasAtraso = document.getElementById('semConcluidasAtraso');
+            bodyConcluidasAtraso.innerHTML = '';
+
+            if (concluidasComAtraso.length === 0) {
+                semConcluidasAtraso.style.display = 'block';
+            } else {
+                semConcluidasAtraso.style.display = 'none';
+                concluidasComAtraso.forEach((p, index) => {
+                    const rowId = 'concluida-atraso-' + index;
+                    
+                    bodyConcluidasAtraso.innerHTML += `
+                        <tr id="row-${rowId}" class="clickable-row" onclick="toggleDescription('${rowId}')">
+                            <td>${p.numeroOS}</td>
+                            <td>${p.cliente}</td>
+                            <td>${p.responsavel}</td>
+                            <td>${p.tipoPendencia}</td>
+                            <td>${p.dataPrazo}</td>
+                            <td class="status-atrasada-concluida">⚠️ Concluída (Atrasada)</td>
+                        </tr>
+                        <tr id="desc-${rowId}" class="description-row">
+                            <td colspan="6">
+                                <div class="description-content">
+                                    <div class="description-label">📝 Descrição da O.S:</div>
+                                    <div class="description-text">${p.descricao || 'Nenhuma descrição disponível'}</div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Tabela de Concluídas a Tempo
             const bodyConcluidas = document.getElementById('bodyConcluidas');
             const semConcluidas = document.getElementById('semConcluidas');
             bodyConcluidas.innerHTML = '';
 
-            if (concluidas.length === 0) {
+            if (concluidasATempo.length === 0) {
                 semConcluidas.style.display = 'block';
             } else {
                 semConcluidas.style.display = 'none';
-                concluidas.forEach((p, index) => {
+                concluidasATempo.forEach((p, index) => {
                     const rowId = 'concluida-' + index;
                     
                     bodyConcluidas.innerHTML += `
