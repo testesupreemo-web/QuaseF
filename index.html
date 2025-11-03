@@ -183,8 +183,10 @@
 
         .content-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 25px;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
         .feature-card {
@@ -225,7 +227,6 @@
 
         .feature-card:nth-child(1) .icon { animation-delay: 0s; }
         .feature-card:nth-child(2) .icon { animation-delay: 0.2s; }
-        .feature-card:nth-child(3) .icon { animation-delay: 0.4s; }
 
         @keyframes floatIcon {
             0%, 100% { transform: translateY(0px); }
@@ -287,19 +288,6 @@
             transform: translateY(-3px);
             box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
             background: #222;
-        }
-
-        .btn-disabled {
-            background: #ccc;
-            color: #888;
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
-
-        .btn-disabled:hover {
-            transform: none;
-            box-shadow: none;
-            background: #ccc;
         }
 
         .empty-state {
@@ -369,6 +357,180 @@
             border-top: 1px solid #e0e0e0;
         }
 
+        /* Modal Login */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .login-modal {
+            background: #fff;
+            border-radius: 25px;
+            padding: 50px 40px;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #f5f5f5;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            color: #666;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-close:hover {
+            background: #000;
+            color: #fff;
+            transform: rotate(90deg);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .login-icon {
+            font-size: 55px;
+            margin-bottom: 15px;
+        }
+
+        .login-title {
+            font-size: 2em;
+            font-weight: 900;
+            color: #000;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .login-subtitle {
+            color: #777;
+            font-size: 0.95em;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-input {
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s;
+            background: #f9f9f9;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #000;
+            background: #fff;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-login {
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            background: #222;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-error {
+            display: none;
+            background: #ff4444;
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            text-align: center;
+            font-weight: 600;
+            animation: shake 0.5s;
+        }
+
+        .login-error.active {
+            display: block;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
         @media (max-width: 768px) {
             .header h1 { font-size: 2.5em; }
             .header p { font-size: 1em; }
@@ -378,10 +540,36 @@
             .content-grid { grid-template-columns: 1fr; }
             .feature-card { padding: 30px 20px; }
             .icon { font-size: 50px; }
+            .login-modal { padding: 40px 30px; }
+            .login-title { font-size: 1.6em; }
         }
     </style>
 </head>
 <body>
+    <!-- Modal de Login -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="login-modal">
+            <button class="login-close" onclick="fecharLogin()">✕</button>
+            <div class="login-header">
+                <div class="login-icon">🔐</div>
+                <h2 class="login-title">Acesso Restrito</h2>
+                <p class="login-subtitle">Digite suas credenciais para continuar</p>
+            </div>
+            <form class="login-form" onsubmit="fazerLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">Usuário</label>
+                    <input type="text" class="form-input" id="loginUsuario" placeholder="Digite seu usuário" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Senha</label>
+                    <input type="password" class="form-input" id="loginSenha" placeholder="Digite sua senha" required>
+                </div>
+                <div class="login-error" id="loginError">Usuário ou senha incorretos!</div>
+                <button type="submit" class="btn-login">Entrar</button>
+            </form>
+        </div>
+    </div>
+
     <div class="container">
         <div class="header">
             <div class="logo">🚀 Bem-vindo</div>
@@ -414,12 +602,12 @@
                 </div>
 
                 <div class="content-grid">
-                    <div class="feature-card link" onclick="window.location.href='pendencias.html';" style="cursor:pointer;">
+                    <div class="feature-card link" onclick="abrirLogin()" style="cursor:pointer;">
                         <span class="icon">📋</span>
                         <h3 class="feature-title">Gerenciador de Pendências</h3>
                         <p class="feature-description">Controle completo de ordens de serviço, prazos e responsáveis com interface intuitiva.</p>
                         <span class="feature-status active">Ativo</span>
-                        <button class="btn-access" type="button" onclick="event.stopPropagation(); window.location.href='./pendencias.html';">Acessar Sistema</button>
+                        <button class="btn-access" type="button" onclick="event.stopPropagation(); abrirLogin();">Acessar Sistema</button>
                     </div>
 
                     <div class="feature-card link" onclick="window.location.href='analise-pendencias.html';" style="cursor:pointer;">
@@ -428,14 +616,6 @@
                         <p class="feature-description">Visualize gráficos, tendências e métricas de suas pendências em tempo real.</p>
                         <span class="feature-status active">Ativo</span>
                         <button class="btn-access" type="button" onclick="event.stopPropagation(); window.location.href='./analise-pendencias.html';">Acessar Sistema</button>
-                    </div>
-
-                    <div class="feature-card">
-                        <span class="icon">🔔</span>
-                        <h3 class="feature-title">Notificações Inteligentes</h3>
-                        <p class="feature-description">Receba alertas automáticos sobre pendências atrasadas e próximas do vencimento.</p>
-                        <span class="feature-status">Desenvolvendo</span>
-                        <button class="btn-access btn-disabled" type="button" disabled>Em Breve</button>
                     </div>
                 </div>
             </div>
@@ -463,6 +643,44 @@
     </div>
 
     <script>
+        // Sistema de Login
+        function abrirLogin() {
+            document.getElementById('loginModal').classList.add('active');
+            document.getElementById('loginError').classList.remove('active');
+            document.getElementById('loginUsuario').value = '';
+            document.getElementById('loginSenha').value = '';
+            document.getElementById('loginUsuario').focus();
+        }
+
+        function fecharLogin() {
+            document.getElementById('loginModal').classList.remove('active');
+        }
+
+        function fazerLogin(event) {
+            event.preventDefault();
+            
+            const usuario = document.getElementById('loginUsuario').value;
+            const senha = document.getElementById('loginSenha').value;
+            
+            // Credenciais
+            if (usuario === 'Admin123' && senha === 'Admin321') {
+                // Login bem-sucedido
+                window.location.href = 'pendencias.html';
+            } else {
+                // Login falhou
+                document.getElementById('loginError').classList.add('active');
+                document.getElementById('loginSenha').value = '';
+                document.getElementById('loginUsuario').focus();
+            }
+        }
+
+        // Fechar modal ao clicar fora
+        document.getElementById('loginModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                fecharLogin();
+            }
+        });
+
         // Carregar dados em tempo real
         function carregarDadosFirebase() {
             const pendenciasRef = window.firebaseRef(window.firebaseDB, 'pendencias');

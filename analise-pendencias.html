@@ -240,8 +240,17 @@
             color: #333;
         }
 
-        table tr:hover {
+        table tr.clickable-row {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        table tr.clickable-row:hover {
             background: #f5f5f5;
+        }
+
+        table tr.clickable-row.active {
+            background: #e8e8e8;
         }
 
         .status-atrasada {
@@ -252,6 +261,47 @@
         .status-concluida {
             color: #28a745;
             font-weight: 700;
+        }
+
+        .description-row {
+            display: none;
+            background: #f9f9f9;
+            border-left: 4px solid #000;
+        }
+
+        .description-row.show {
+            display: table-row;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .description-content {
+            padding: 20px 15px;
+        }
+
+        .description-label {
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .description-text {
+            color: #555;
+            line-height: 1.6;
+            font-size: 0.95em;
         }
 
         .empty-message {
@@ -368,6 +418,38 @@
         let pendencias = [];
         let chartStatus, chartResponsavel, chartTipo;
 
+        // Paleta de cores diversificadas
+        const coresPaleta = [
+            '#9c27b0', // Roxo
+            '#00bcd4', // Ciano
+            '#ff9800', // Laranja
+            '#4caf50', // Verde
+            '#e91e63', // Pink
+            '#3f51b5', // Indigo
+            '#ff5722', // Laranja escuro
+            '#009688', // Teal
+            '#ffc107', // Amarelo
+            '#795548', // Marrom
+            '#607d8b', // Azul cinza
+            '#f44336', // Vermelho
+            '#8bc34a', // Verde claro
+            '#cddc39', // Lima
+            '#673ab7', // Roxo profundo
+            '#00897b', // Verde oceano
+            '#d32f2f', // Vermelho escuro
+            '#1976d2', // Azul
+            '#c2185b', // Rosa escuro
+            '#7b1fa2'  // Roxo escuro
+        ];
+
+        function gerarCoresUnicas(quantidade) {
+            const cores = [];
+            for (let i = 0; i < quantidade; i++) {
+                cores.push(coresPaleta[i % coresPaleta.length]);
+            }
+            return cores;
+        }
+
         function carregarDados() {
             const pendenciasRef = window.firebaseRef(window.firebaseDB, 'pendencias');
             window.firebaseOnValue(pendenciasRef, (snapshot) => {
@@ -437,19 +519,48 @@
                 options: { responsive: true, indexAxis: 'y' }
             });
 
-            // Tipo
+            // Tipo - Com cores únicas
             const tipoMap = {};
             pendencias.forEach(p => tipoMap[p.tipoPendencia] = (tipoMap[p.tipoPendencia] || 0) + 1);
+            const tiposUnicos = Object.keys(tipoMap);
+            const coresUnicas = gerarCoresUnicas(tiposUnicos.length);
+            
             const ctxTipo = document.getElementById('chartTipo').getContext('2d');
             if (chartTipo) chartTipo.destroy();
             chartTipo = new Chart(ctxTipo, {
                 type: 'pie',
                 data: {
-                    labels: Object.keys(tipoMap),
-                    datasets: [{ data: Object.values(tipoMap), backgroundColor: ['#9c27b0', '#00bcd4', '#ff9800', '#4caf50'], borderColor: '#fff', borderWidth: 2 }]
+                    labels: tiposUnicos,
+                    datasets: [{ 
+                        data: Object.values(tipoMap), 
+                        backgroundColor: coresUnicas,
+                        borderColor: '#fff', 
+                        borderWidth: 2 
+                    }]
                 },
-                options: { responsive: true }
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
             });
+        }
+
+        function toggleDescription(rowId) {
+            const descRow = document.getElementById('desc-' + rowId);
+            const mainRow = document.getElementById('row-' + rowId);
+            
+            // Fechar todas as outras descrições
+            document.querySelectorAll('.description-row').forEach(row => {
+                if (row.id !== 'desc-' + rowId) {
+                    row.classList.remove('show');
+                    const otherRowId = row.id.replace('desc-', '');
+                    const otherMainRow = document.getElementById('row-' + otherRowId);
+                    if (otherMainRow) otherMainRow.classList.remove('active');
+                }
+            });
+            
+            // Toggle da linha atual
+            if (descRow) {
+                descRow.classList.toggle('show');
+                mainRow.classList.toggle('active');
+            }
         }
 
         function atualizarTabelas() {
@@ -471,17 +582,27 @@
                 semAtraso.style.display = 'block';
             } else {
                 semAtraso.style.display = 'none';
-                atrasadas.forEach(p => {
+                atrasadas.forEach((p, index) => {
                     const dataPrazo = new Date(p.dataPrazo + 'T00:00:00');
                     const dias = Math.floor((hoje - dataPrazo) / (1000 * 60 * 60 * 24));
+                    const rowId = 'atraso-' + index;
+                    
                     bodyAtraso.innerHTML += `
-                        <tr>
+                        <tr id="row-${rowId}" class="clickable-row" onclick="toggleDescription('${rowId}')">
                             <td>${p.numeroOS}</td>
                             <td>${p.cliente}</td>
                             <td>${p.responsavel}</td>
                             <td>${p.tipoPendencia}</td>
                             <td>${p.dataPrazo}</td>
                             <td class="status-atrasada">${dias} dias</td>
+                        </tr>
+                        <tr id="desc-${rowId}" class="description-row">
+                            <td colspan="6">
+                                <div class="description-content">
+                                    <div class="description-label">📝 Descrição da O.S:</div>
+                                    <div class="description-text">${p.descricao || 'Nenhuma descrição disponível'}</div>
+                                </div>
+                            </td>
                         </tr>
                     `;
                 });
@@ -495,15 +616,25 @@
                 semConcluidas.style.display = 'block';
             } else {
                 semConcluidas.style.display = 'none';
-                concluidas.forEach(p => {
+                concluidas.forEach((p, index) => {
+                    const rowId = 'concluida-' + index;
+                    
                     bodyConcluidas.innerHTML += `
-                        <tr>
+                        <tr id="row-${rowId}" class="clickable-row" onclick="toggleDescription('${rowId}')">
                             <td>${p.numeroOS}</td>
                             <td>${p.cliente}</td>
                             <td>${p.responsavel}</td>
                             <td>${p.tipoPendencia}</td>
                             <td>${p.dataPrazo}</td>
                             <td class="status-concluida">✅ Concluída</td>
+                        </tr>
+                        <tr id="desc-${rowId}" class="description-row">
+                            <td colspan="6">
+                                <div class="description-content">
+                                    <div class="description-label">📝 Descrição da O.S:</div>
+                                    <div class="description-text">${p.descricao || 'Nenhuma descrição disponível'}</div>
+                                </div>
+                            </td>
                         </tr>
                     `;
                 });
