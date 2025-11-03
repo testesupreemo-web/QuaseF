@@ -485,7 +485,6 @@
             color: #212529;
             font-size: 1.1em;
             font-weight: 800;
-            margin-bottom: 15px;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -1086,7 +1085,6 @@
             margin-bottom: 15px;
         }
 
-        /* Keyboard Shortcuts Manual */
         .keyboard-manual {
             position: fixed;
             bottom: 20px;
@@ -1310,6 +1308,7 @@
             <div class="filter-section">
                 <div class="filter-buttons">
                     <button class="filter-btn" onclick="toggleFilter('status')">📊 Filtrar por Status</button>
+                    <button class="filter-btn" onclick="toggleFilter('numeroOS')">📄 Filtrar por O.S</button>
                     <button class="filter-btn" onclick="toggleFilter('responsavel')">👨‍💼 Filtrar por Responsável</button>
                     <button class="filter-btn" onclick="toggleFilter('tipo')">🏷️ Filtrar por Tipo</button>
                     <button class="btn-clear-filters" onclick="limparFiltros()">🗑️ Limpar Filtros</button>
@@ -1318,20 +1317,37 @@
                 <div id="activeFiltersContainer" class="active-filters"></div>
 
                 <div id="filterStatus" class="filter-dropdown">
-                    <h4>📊 Selecione Status (múltipla seleção)</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="margin: 0;">📊 Selecione Status (múltipla seleção)</h4>
+                        <button style="background: none; border: none; font-size: 20px; cursor: pointer; color: #6c757d;" onclick="fecharDropdown('filterStatus')">×</button>
+                    </div>
                     <div id="listStatus">
                         <div class="filter-item" onclick="toggleFiltroItem('status', 'atrasada')">🔴 Atrasada</div>
                         <div class="filter-item" onclick="toggleFiltroItem('status', 'no prazo')">🟡 No Prazo</div>
                     </div>
                 </div>
 
+                <div id="filterNumeroOS" class="filter-dropdown">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="margin: 0;">📄 Selecione O.S (múltipla seleção)</h4>
+                        <button style="background: none; border: none; font-size: 20px; cursor: pointer; color: #6c757d;" onclick="fecharDropdown('filterNumeroOS')">×</button>
+                    </div>
+                    <div id="listNumeroOS"></div>
+                </div>
+
                 <div id="filterResponsavel" class="filter-dropdown">
-                    <h4>👨‍💼 Selecione Responsáveis (múltipla seleção)</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="margin: 0;">👨‍💼 Selecione Responsáveis (múltipla seleção)</h4>
+                        <button style="background: none; border: none; font-size: 20px; cursor: pointer; color: #6c757d;" onclick="fecharDropdown('filterResponsavel')">×</button>
+                    </div>
                     <div id="listResponsavel"></div>
                 </div>
 
                 <div id="filterTipo" class="filter-dropdown">
-                    <h4>🏷️ Selecione Tipos (múltipla seleção)</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="margin: 0;">🏷️ Selecione Tipos (múltipla seleção)</h4>
+                        <button style="background: none; border: none; font-size: 20px; cursor: pointer; color: #6c757d;" onclick="fecharDropdown('filterTipo')">×</button>
+                    </div>
                     <div id="listTipo"></div>
                 </div>
             </div>
@@ -1376,10 +1392,8 @@
         </div>
     </div>
 
-    <!-- Keyboard Shortcuts Button -->
     <button class="keyboard-manual" onclick="abrirKeyboardModal()" title="Ver atalhos (?)">⌨️</button>
 
-    <!-- Keyboard Shortcuts Modal -->
     <div id="keyboardModal" class="keyboard-modal">
         <div class="keyboard-modal-content">
             <div class="keyboard-modal-header">
@@ -1496,6 +1510,7 @@
         let pendenciasConcluidasFiltradas = [];
         let filtrosAtivos = {
             status: [],
+            numeroOS: [],
             responsavel: [],
             tipo: []
         };
@@ -1510,7 +1525,6 @@
 
         emailjs.init(EMAIL_CONFIG.publicKey);
 
-        // MELHORIA 2: Debounce para busca
         function debounce(func, delay) {
             return function(...args) {
                 clearTimeout(debounceTimer);
@@ -1522,7 +1536,6 @@
             filtrarPendencias(termo);
         }, 300);
 
-        // MELHORIA 6: Confirmação antes de concluir
         async function concluirPendenciaComConfirmacao(id) {
             const pendencia = pendencias.find(p => p.id === id);
             if (!pendencia) return;
@@ -1549,7 +1562,10 @@
             mostrarNotificacao('✅ Concluída!');
         }
 
-        // FUNÇÃO: Exportar para Excel - FUNCIONANDO 100%
+        function fecharDropdown(dropdownId) {
+            document.getElementById(dropdownId).classList.remove('show');
+        }
+
         function exportarExcel() {
             try {
                 const pendenciasParaExportar = pendenciasAtivasFiltradas.length > 0 ? 
@@ -1560,7 +1576,6 @@
                     return;
                 }
 
-                // Preparar dados em array
                 const dados = [];
                 dados.push([
                     'O.S',
@@ -1591,10 +1606,8 @@
                     ]);
                 });
 
-                // Criar worksheet usando XLSX
                 const ws = XLSX.utils.aoa_to_sheet(dados);
                 
-                // Definir largura das colunas
                 ws['!cols'] = [
                     { wch: 10 },
                     { wch: 25 },
@@ -1606,15 +1619,12 @@
                     { wch: 12 }
                 ];
 
-                // Criar workbook
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, 'Pendências');
 
-                // Gerar nome com data
                 const dataAtual = new Date();
                 const nomeArquivo = `Pendencias_${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}.xlsx`;
 
-                // Download
                 XLSX.writeFile(wb, nomeArquivo);
                 mostrarNotificacao('✅ Excel exportado com sucesso!');
 
@@ -1624,7 +1634,6 @@
             }
         }
 
-        // TECLADO: Atalhos com ALT (sem conflito com Edge)
         document.addEventListener('keydown', function(e) {
             if (e.altKey) {
                 switch(e.key.toLowerCase()) {
@@ -1854,16 +1863,25 @@
         }
 
         function atualizarListasFiltro() {
+            // Números O.S
+            const numerosOSUnicos = [...new Set(pendencias.map(p => String(p.numeroOS)))].sort((a, b) => parseInt(a) - parseInt(b));
+            document.getElementById('listNumeroOS').innerHTML = numerosOSUnicos.map(os => {
+                return `<div class="filter-item ${filtrosAtivos.numeroOS.includes(os) ? 'selected' : ''}" onclick="toggleFiltroItem('numeroOS', '${os}')">O.S ${os}</div>`;
+            }).join('');
+
+            // Responsáveis
             const responsaveisUnicos = [...new Set(pendencias.map(p => p.responsavel))].sort();
             document.getElementById('listResponsavel').innerHTML = responsaveisUnicos.map(resp => {
-                return `<div class="filter-item ${filtrosAtivos.responsavel.includes(resp) ? 'selected' : ''}" onclick="toggleFiltroItem('responsavel', '${resp.replace(/'/g, "\\'")}')}">${resp}</div>`;
+                return `<div class="filter-item ${filtrosAtivos.responsavel.includes(resp) ? 'selected' : ''}" onclick="toggleFiltroItem('responsavel', '${resp.replace(/'/g, "\\'")}')">${resp}</div>`;
             }).join('');
 
+            // Tipos
             const tiposUnicos = [...new Set(pendencias.map(p => p.tipoPendencia))].sort();
             document.getElementById('listTipo').innerHTML = tiposUnicos.map(tipo => {
-                return `<div class="filter-item ${filtrosAtivos.tipo.includes(tipo) ? 'selected' : ''}" onclick="toggleFiltroItem('tipo', '${tipo.replace(/'/g, "\\'")}')}">${tipo}</div>`;
+                return `<div class="filter-item ${filtrosAtivos.tipo.includes(tipo) ? 'selected' : ''}" onclick="toggleFiltroItem('tipo', '${tipo.replace(/'/g, "\\'")}')">${tipo}</div>`;
             }).join('');
 
+            // Status
             document.querySelectorAll('#listStatus .filter-item').forEach(item => {
                 const statusText = item.textContent.toLowerCase().includes('atrasada') ? 'atrasada' : 'no prazo';
                 if (filtrosAtivos.status.includes(statusText)) {
@@ -1916,6 +1934,7 @@
         function limparFiltros() {
             filtrosAtivos = {
                 status: [],
+                numeroOS: [],
                 responsavel: [],
                 tipo: []
             };
@@ -1936,6 +1955,7 @@
             
             const icones = {
                 status: '📊',
+                numeroOS: '📄',
                 responsavel: '👨‍💼',
                 tipo: '🏷️'
             };
@@ -1954,7 +1974,7 @@
                     tagsHTML += `
                         <div class="filter-tag">
                             ${icones[tipo]} ${display}
-                            <span class="remove-filter" onclick="removerFiltro('${tipo}', '${valor.replace(/'/g, "\\'")}')">×</span>
+                            <span class="remove-filter" onclick="removerFiltro('${tipo}', '${valor.replace(/'/g, "\\'")}')" style="cursor: pointer; font-weight: 900; font-size: 18px;">×</span>
                         </div>
                     `;
                 });
@@ -1962,6 +1982,7 @@
             
             container.innerHTML = tagsHTML;
         }
+
 
         function aplicarTodosFiltros() {
             let ativas = pendencias.filter(p => p.status === 'pendente');
@@ -1974,6 +1995,11 @@
                     if (filtrosAtivos.status.includes('no prazo') && statusPendencia === 'futura') return true;
                     return false;
                 });
+            }
+            
+            if (filtrosAtivos.numeroOS.length > 0) {
+                ativas = ativas.filter(p => filtrosAtivos.numeroOS.includes(String(p.numeroOS)));
+                concluidas = concluidas.filter(p => filtrosAtivos.numeroOS.includes(String(p.numeroOS)));
             }
             
             if (filtrosAtivos.responsavel.length > 0) {
