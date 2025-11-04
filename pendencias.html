@@ -517,6 +517,45 @@
             font-weight: 900;
         }
 
+        .date-filter-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .date-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .date-input-group label {
+            font-weight: 700;
+            color: #212529;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .date-input-group input {
+            padding: 12px 15px;
+            border: 2px solid rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            background: white;
+            color: #212529;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .date-input-group input:focus {
+            outline: none;
+            border-color: #212529;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
         .active-filters {
             display: flex;
             gap: 10px;
@@ -584,6 +623,63 @@
 
         .tab-content.active {
             display: block;
+        }
+
+        .sort-section {
+            background: linear-gradient(135deg, rgba(33, 37, 41, 0.05), rgba(255, 255, 255, 0.95));
+            border: 2px solid #495057;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .sort-section h4 {
+            color: #212529;
+            font-weight: 800;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1em;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .sort-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .sort-btn {
+            background: white;
+            border: 2px solid rgba(0, 0, 0, 0.15);
+            padding: 10px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 12px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #212529;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .sort-btn:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .sort-btn.active {
+            background: #212529;
+            color: white;
+            border-color: #212529;
         }
 
         .pendencias-header {
@@ -1210,6 +1306,8 @@
             .tab-button { padding: 12px 20px; }
             .filter-buttons { flex-direction: column; }
             .filter-btn { width: 100%; }
+            .sort-buttons { flex-direction: column; }
+            .sort-btn { width: 100%; }
             .modal-confirm-content { padding: 30px; }
             .modal-confirm-icon { font-size: 60px; }
             .modal-confirm-buttons { flex-direction: column; }
@@ -1223,6 +1321,7 @@
             .keyboard-modal-content { width: 95%; padding: 30px; }
             .shortcut-item { flex-direction: column; text-align: left; }
             .shortcut-key { margin-top: 10px; width: 100%; text-align: center; }
+            .date-filter-inputs { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -1311,6 +1410,7 @@
                     <button class="filter-btn" onclick="toggleFilter('numeroOS')">📄 Filtrar por O.S</button>
                     <button class="filter-btn" onclick="toggleFilter('responsavel')">👨‍💼 Filtrar por Responsável</button>
                     <button class="filter-btn" onclick="toggleFilter('tipo')">🏷️ Filtrar por Tipo</button>
+                    <button class="filter-btn" onclick="toggleFilter('data')">📅 Filtrar por Data</button>
                     <button class="btn-clear-filters" onclick="limparFiltros()">🗑️ Limpar Filtros</button>
                 </div>
 
@@ -1350,6 +1450,26 @@
                     </div>
                     <div id="listTipo"></div>
                 </div>
+
+                <div id="filterData" class="filter-dropdown">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="margin: 0;">📅 Filtrar por Período de Data</h4>
+                        <button style="background: none; border: none; font-size: 20px; cursor: pointer; color: #6c757d;" onclick="fecharDropdown('filterData')">×</button>
+                    </div>
+                    <div class="date-filter-inputs">
+                        <div class="date-input-group">
+                            <label>📅 Data Início</label>
+                            <input type="date" id="dataInicio" onchange="aplicarFiltroData()">
+                        </div>
+                        <div class="date-input-group">
+                            <label>📅 Data Fim</label>
+                            <input type="date" id="dataFim" onchange="aplicarFiltroData()">
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; font-size: 13px; color: #856404;">
+                        💡 Deixe em branco para filtrar apenas uma data específica
+                    </div>
+                </div>
             </div>
 
             <div class="tabs-container">
@@ -1358,6 +1478,18 @@
             </div>
 
             <div id="tab-ativas" class="tab-content active">
+                <div class="sort-section">
+                    <h4>🔀 Ordenar Resultados</h4>
+                    <div class="sort-buttons">
+                        <button class="sort-btn" onclick="aplicarOrdenacao('os-crescente')">📈 O.S Crescente</button>
+                        <button class="sort-btn" onclick="aplicarOrdenacao('os-decrescente')">📉 O.S Decrescente</button>
+                        <button class="sort-btn" onclick="aplicarOrdenacao('descricao')">📝 Descrição A-Z</button>
+                        <button class="sort-btn" onclick="aplicarOrdenacao('data-crescente')">📅 Data Crescente</button>
+                        <button class="sort-btn" onclick="aplicarOrdenacao('data-decrescente')">📅 Data Decrescente</button>
+                        <button class="sort-btn" onclick="limparOrdenacao()">↩️ Remover Ordem</button>
+                    </div>
+                </div>
+
                 <div class="legend">
                     <div class="legend-item"><span class="legend-dot vencida"></span><span>Atrasada</span></div>
                     <div class="legend-item"><span class="legend-dot futura"></span><span>No Prazo</span></div>
@@ -1508,11 +1640,14 @@
         let pendencias = [];
         let pendenciasAtivasFiltradas = [];
         let pendenciasConcluidasFiltradas = [];
+        let ordenacaoAtual = null;
         let filtrosAtivos = {
             status: [],
             numeroOS: [],
             responsavel: [],
-            tipo: []
+            tipo: [],
+            dataInicio: '',
+            dataFim: ''
         };
         let idParaDeletar = null;
         let debounceTimer = null;
@@ -1535,6 +1670,85 @@
         const filtrarPendenciasDebounced = debounce((termo) => {
             filtrarPendencias(termo);
         }, 300);
+
+        function aplicarOrdenacao(tipo) {
+            ordenacaoAtual = tipo;
+            atualizarBotoesOrdenacao();
+            aplicarTodosFiltros();
+            mostrarNotificacao(`✅ Ordenação aplicada: ${getNomeOrdenacao(tipo)}`);
+        }
+
+        function getNomeOrdenacao(tipo) {
+            const nomes = {
+                'os-crescente': 'O.S Crescente',
+                'os-decrescente': 'O.S Decrescente',
+                'descricao': 'Descrição A-Z',
+                'data-crescente': 'Data Crescente',
+                'data-decrescente': 'Data Decrescente'
+            };
+            return nomes[tipo] || tipo;
+        }
+
+        function limparOrdenacao() {
+            ordenacaoAtual = null;
+            atualizarBotoesOrdenacao();
+            aplicarTodosFiltros();
+            mostrarNotificacao('✅ Ordenação removida');
+        }
+
+        function atualizarBotoesOrdenacao() {
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            if (ordenacaoAtual) {
+                const textoBtn = getNomeOrdenacao(ordenacaoAtual);
+                document.querySelectorAll('.sort-btn').forEach(btn => {
+                    if (btn.textContent.includes(textoBtn)) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+        }
+
+        function ordenarResultados(lista) {
+            if (!ordenacaoAtual || !lista || lista.length === 0) {
+                return lista;
+            }
+
+            const copia = [...lista];
+
+            switch(ordenacaoAtual) {
+                case 'os-crescente':
+                    copia.sort((a, b) => parseInt(a.numeroOS) - parseInt(b.numeroOS));
+                    break;
+                case 'os-decrescente':
+                    copia.sort((a, b) => parseInt(b.numeroOS) - parseInt(a.numeroOS));
+                    break;
+                case 'descricao':
+                    copia.sort((a, b) => (a.descricao || '').localeCompare(b.descricao || '', 'pt-BR'));
+                    break;
+                case 'data-crescente':
+                    copia.sort((a, b) => new Date(a.dataPrazo) - new Date(b.dataPrazo));
+                    break;
+                case 'data-decrescente':
+                    copia.sort((a, b) => new Date(b.dataPrazo) - new Date(a.dataPrazo));
+                    break;
+            }
+
+            return copia;
+        }
+
+        function aplicarFiltroData() {
+            const dataInicio = document.getElementById('dataInicio').value;
+            const dataFim = document.getElementById('dataFim').value;
+            
+            filtrosAtivos.dataInicio = dataInicio;
+            filtrosAtivos.dataFim = dataFim;
+            
+            atualizarTagsFiltros();
+            aplicarTodosFiltros();
+        }
 
         async function concluirPendenciaComConfirmacao(id) {
             const pendencia = pendencias.find(p => p.id === id);
@@ -1851,12 +2065,6 @@
                     });
                 });
                 
-                pendencias.sort((a, b) => {
-                    const numA = parseInt(a.numeroOS) || 0;
-                    const numB = parseInt(b.numeroOS) || 0;
-                    return numA - numB;
-                });
-                
                 atualizarListasFiltro();
                 aplicarTodosFiltros();
             });
@@ -1921,9 +2129,16 @@
         }
 
         function removerFiltro(tipo, valor) {
-            const index = filtrosAtivos[tipo].indexOf(valor);
-            if (index !== -1) {
-                filtrosAtivos[tipo].splice(index, 1);
+            if (tipo === 'data') {
+                filtrosAtivos.dataInicio = '';
+                filtrosAtivos.dataFim = '';
+                document.getElementById('dataInicio').value = '';
+                document.getElementById('dataFim').value = '';
+            } else {
+                const index = filtrosAtivos[tipo].indexOf(valor);
+                if (index !== -1) {
+                    filtrosAtivos[tipo].splice(index, 1);
+                }
             }
             
             atualizarListasFiltro();
@@ -1936,8 +2151,13 @@
                 status: [],
                 numeroOS: [],
                 responsavel: [],
-                tipo: []
+                tipo: [],
+                dataInicio: '',
+                dataFim: ''
             };
+            
+            document.getElementById('dataInicio').value = '';
+            document.getElementById('dataFim').value = '';
             
             document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('show'));
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -1966,6 +2186,8 @@
             };
             
             Object.keys(filtrosAtivos).forEach(tipo => {
+                if (tipo === 'dataInicio' || tipo === 'dataFim') return;
+                
                 filtrosAtivos[tipo].forEach(valor => {
                     let display = valor;
                     if (tipo === 'status') {
@@ -1980,14 +2202,26 @@
                 });
             });
             
+            // Tag de filtro de data
+            if (filtrosAtivos.dataInicio || filtrosAtivos.dataFim) {
+                const inicio = filtrosAtivos.dataInicio ? formatarData(filtrosAtivos.dataInicio) : '...';
+                const fim = filtrosAtivos.dataFim ? formatarData(filtrosAtivos.dataFim) : '...';
+                tagsHTML += `
+                    <div class="filter-tag">
+                        📅 ${inicio} a ${fim}
+                        <span class="remove-filter" onclick="removerFiltro('data', '')" style="cursor: pointer; font-weight: 900; font-size: 18px;">×</span>
+                    </div>
+                `;
+            }
+            
             container.innerHTML = tagsHTML;
         }
-
 
         function aplicarTodosFiltros() {
             let ativas = pendencias.filter(p => p.status === 'pendente');
             let concluidas = pendencias.filter(p => p.status === 'concluida');
             
+            // Filtro de status
             if (filtrosAtivos.status.length > 0) {
                 ativas = ativas.filter(p => {
                     const statusPendencia = getStatusPorData(p);
@@ -1997,20 +2231,59 @@
                 });
             }
             
+            // Filtro de O.S
             if (filtrosAtivos.numeroOS.length > 0) {
                 ativas = ativas.filter(p => filtrosAtivos.numeroOS.includes(String(p.numeroOS)));
                 concluidas = concluidas.filter(p => filtrosAtivos.numeroOS.includes(String(p.numeroOS)));
             }
             
+            // Filtro de responsável
             if (filtrosAtivos.responsavel.length > 0) {
                 ativas = ativas.filter(p => filtrosAtivos.responsavel.includes(p.responsavel));
                 concluidas = concluidas.filter(p => filtrosAtivos.responsavel.includes(p.responsavel));
             }
             
+            // Filtro de tipo
             if (filtrosAtivos.tipo.length > 0) {
                 ativas = ativas.filter(p => filtrosAtivos.tipo.includes(p.tipoPendencia));
                 concluidas = concluidas.filter(p => filtrosAtivos.tipo.includes(p.tipoPendencia));
             }
+            
+            // Filtro de data
+            if (filtrosAtivos.dataInicio || filtrosAtivos.dataFim) {
+                const dataInicio = filtrosAtivos.dataInicio ? new Date(filtrosAtivos.dataInicio + 'T00:00:00') : null;
+                const dataFim = filtrosAtivos.dataFim ? new Date(filtrosAtivos.dataFim + 'T23:59:59') : null;
+                
+                ativas = ativas.filter(p => {
+                    const dataPrazo = new Date(p.dataPrazo + 'T00:00:00');
+                    
+                    if (dataInicio && dataFim) {
+                        return dataPrazo >= dataInicio && dataPrazo <= dataFim;
+                    } else if (dataInicio) {
+                        return dataPrazo >= dataInicio;
+                    } else if (dataFim) {
+                        return dataPrazo <= dataFim;
+                    }
+                    return true;
+                });
+                
+                concluidas = concluidas.filter(p => {
+                    const dataPrazo = new Date(p.dataPrazo + 'T00:00:00');
+                    
+                    if (dataInicio && dataFim) {
+                        return dataPrazo >= dataInicio && dataPrazo <= dataFim;
+                    } else if (dataInicio) {
+                        return dataPrazo >= dataInicio;
+                    } else if (dataFim) {
+                        return dataPrazo <= dataFim;
+                    }
+                    return true;
+                });
+            }
+
+            // Aplicar ordenação
+            ativas = ordenarResultados(ativas);
+            concluidas = ordenarResultados(concluidas);
             
             pendenciasAtivasFiltradas = ativas;
             pendenciasConcluidasFiltradas = concluidas;
@@ -2181,6 +2454,10 @@
                     p.responsavel.toLowerCase().includes(termoLower) ||
                     (p.descricao && p.descricao.toLowerCase().includes(termoLower))
                 );
+
+                // Aplicar ordenação
+                ativas = ordenarResultados(ativas);
+                concluidas = ordenarResultados(concluidas);
                 
                 pendenciasAtivasFiltradas = ativas;
                 pendenciasConcluidasFiltradas = concluidas;
@@ -2226,12 +2503,6 @@
                 contadorElement.textContent = '0 pendências';
                 return;
             }
-
-            lista.sort((a, b) => {
-                const numA = parseInt(a.numeroOS) || 0;
-                const numB = parseInt(b.numeroOS) || 0;
-                return numA - numB;
-            });
 
             listaElement.innerHTML = lista.map(p => {
                 const statusData = getStatusPorData(p);
@@ -2298,73 +2569,74 @@
         }
 
         function enviarAlertaPendencias() {
-    const emailDestino = document.getElementById('emailDestino').value.trim();
-    
-    if (!emailDestino || !validarEmail(emailDestino)) {
-        mostrarNotificacao('❌ Email inválido!', 'error');
-        return;
-    }
-    
-    localStorage.setItem('emailDestino', emailDestino);
-
-    // Modifiquei aqui para incluir tanto atrasadas quanto no prazo
-    const pendenciasParaEnviar = pendenciasAtivasFiltradas.filter(p => {
-        const status = getStatusPorData(p);
-        return status === 'vencida' || status === 'futura'; // Atrasada OU No Prazo
-    });
-
-    if (pendenciasParaEnviar.length === 0) {
-        mostrarNotificacao('✅ Nenhuma pendência ativa!', 'success');
-        return;
-    }
-
-    // Separar por status para organização
-    const atrasadas = pendenciasParaEnviar.filter(p => getStatusPorData(p) === 'vencida');
-    const noPrazo = pendenciasParaEnviar.filter(p => getStatusPorData(p) === 'futura');
-
-    let listaPendencias = '';
-
-    // Seção de atrasadas
-    if (atrasadas.length > 0) {
-        listaPendencias += '🔴 ATRASADAS:\n';
-        atrasadas.forEach((p, index) => {
-            listaPendencias += `${index + 1}. O.S ${p.numeroOS} - ${p.cliente}\n`;
-            if (p.descricao && p.descricao.trim()) {
-                listaPendencias += `   💬 ${p.descricao}\n`;
+            const emailDestino = document.getElementById('emailDestino').value.trim();
+            
+            if (!emailDestino || !validarEmail(emailDestino)) {
+                mostrarNotificacao('❌ Email inválido!', 'error');
+                return;
             }
-            listaPendencias += `\n`;
-        });
-        listaPendencias += `\n`;
-    }
+            
+            localStorage.setItem('emailDestino', emailDestino);
 
-    // Seção no prazo
-    if (noPrazo.length > 0) {
-        listaPendencias += '🟡 NO PRAZO:\n';
-        noPrazo.forEach((p, index) => {
-            listaPendencias += `${index + 1}. O.S ${p.numeroOS} - ${p.cliente}\n`;
-            if (p.descricao && p.descricao.trim()) {
-                listaPendencias += `   💬 ${p.descricao}\n`;
+            const pendenciasParaEnviar = pendenciasAtivasFiltradas.filter(p => {
+                const status = getStatusPorData(p);
+                return status === 'vencida' || status === 'futura';
+            });
+
+            if (pendenciasParaEnviar.length === 0) {
+                mostrarNotificacao('✅ Nenhuma pendência ativa!', 'success');
+                return;
             }
-            listaPendencias += `\n`;
-        });
-    }
 
-    const templateParams = {
-        to_email: emailDestino,
-        total_atrasadas: atrasadas.length,
-        total_no_prazo: noPrazo.length,
-        total_pendencias: pendenciasParaEnviar.length,
-        pendencias_lista: listaPendencias,
-        data_envio: new Date().toLocaleString('pt-BR')
-    };
+            const atrasadas = pendenciasParaEnviar.filter(p => getStatusPorData(p) === 'vencida');
+            const noPrazo = pendenciasParaEnviar.filter(p => getStatusPorData(p) === 'futura');
 
-    mostrarNotificacao('📤 Enviando...', 'info');
+            let listaPendencias = '';
 
-    emailjs.send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, templateParams)
-        .then(() => mostrarNotificacao(`✅ Alerta enviado! (${atrasadas.length} atrasadas + ${noPrazo.length} no prazo)`))
-        .catch(() => mostrarNotificacao('❌ Erro no email', 'error'));
-}
+            if (atrasadas.length > 0) {
+                listaPendencias += '🔴 ATRASADAS:\n';
+                atrasadas.forEach((p, index) => {
+                    listaPendencias += `${index + 1}. O.S ${p.numeroOS} - ${p.cliente}\n`;
+                    listaPendencias += `   👨‍💼 Responsável: ${p.responsavel}\n`;
+                    listaPendencias += `   🏷️ Tipo: ${p.tipoPendencia}\n`;
+                    listaPendencias += `   📅 Prazo: ${formatarData(p.dataPrazo)}\n`;
+                    if (p.descricao && p.descricao.trim()) {
+                        listaPendencias += `   💬 ${p.descricao}\n`;
+                    }
+                    listaPendencias += `\n`;
+                });
+                listaPendencias += `\n`;
+            }
 
+            if (noPrazo.length > 0) {
+                listaPendencias += '🟡 NO PRAZO:\n';
+                noPrazo.forEach((p, index) => {
+                    listaPendencias += `${index + 1}. O.S ${p.numeroOS} - ${p.cliente}\n`;
+                    listaPendencias += `   👨‍💼 Responsável: ${p.responsavel}\n`;
+                    listaPendencias += `   🏷️ Tipo: ${p.tipoPendencia}\n`;
+                    listaPendencias += `   📅 Prazo: ${formatarData(p.dataPrazo)}\n`;
+                    if (p.descricao && p.descricao.trim()) {
+                        listaPendencias += `   💬 ${p.descricao}\n`;
+                    }
+                    listaPendencias += `\n`;
+                });
+            }
+
+            const templateParams = {
+                to_email: emailDestino,
+                total_atrasadas: atrasadas.length,
+                total_no_prazo: noPrazo.length,
+                total_pendencias: pendenciasParaEnviar.length,
+                pendencias_lista: listaPendencias,
+                data_envio: new Date().toLocaleString('pt-BR')
+            };
+
+            mostrarNotificacao('📤 Enviando...', 'info');
+
+            emailjs.send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, templateParams)
+                .then(() => mostrarNotificacao(`✅ Alerta enviado! (${atrasadas.length} atrasadas + ${noPrazo.length} no prazo)`))
+                .catch(() => mostrarNotificacao('❌ Erro no email', 'error'));
+        }
 
         function mostrarNotificacao(mensagem, tipo = 'success') {
             const cores = {
