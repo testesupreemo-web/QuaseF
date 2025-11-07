@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Compras - Sistema Integrado</title>
+    
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function(){
+            emailjs.init("SemwnDhUgHqJ1l0VG");
+        })();
+    </script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, onValue, update, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAz0AnZ_-IImzWZioHy940uukfpFlZVR2o",
+            authDomain: "planilha-suprema-5bd7f.firebaseapp.com",
+            databaseURL: "https://planilha-suprema-5bd7f-default-rtdb.firebaseio.com",
+            projectId: "planilha-suprema-5bd7f",
+            storageBucket: "planilha-suprema-5bd7f.firebasestorage.app",
+            messagingSenderId: "760644555297",
+            appId: "1:760644555297:web:c538ac1e23df00f5af0960"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        window.firebaseDB = database;
+        window.firebaseRef = ref;
+        window.firebaseSet = set;
+        window.firebaseOnValue = onValue;
+        window.firebaseUpdate = update;
+        window.firebaseRemove = remove;
+    </script>
+
+    <!-- SheetJS para processar Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- jsPDF e AutoTable para PDF melhorado -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- pako para compressão gzip -->
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 50%, #f0f0f0 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(100, 100, 100, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(50, 50, 50, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn-dashboard {
+            background: linear-gradient(135deg, #212529 0%, #343a40 100%);
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 14px;
+            transition: all 0.4s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-dashboard:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            background: white;
+            border: 3px solid #212529;
+            padding: 50px 40px;
+            border-radius: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            margin-bottom: 30px;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header h1 {
+            font-size: 3.2em;
+            font-weight: 900;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #212529 0%, #495057 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -2px;
+        }
+
+        .header p {
+            color: #495057;
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .upload-section {
+            background: linear-gradient(135deg, rgba(52, 58, 64, 0.05), rgba(255, 255, 255, 0.95));
+            border: 2px solid #495057;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .upload-section h3 {
+            color: #212529;
+            margin-bottom: 15px;
+            font-weight: 800;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .upload-section p {
+            color: #495057;
+            font-size: 15px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 18px 35px;
+            background: linear-gradient(135deg, #212529 0%, #343a40 100%);
+            color: white;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: all 0.4s;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .file-input-label:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .file-name {
+            margin-top: 15px;
+            color: #28a745;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .file-info {
+            margin-top: 15px;
+            padding: 12px;
+            background: #d4edda;
+            border-radius: 10px;
+            color: #155724;
+            font-size: 13px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .file-info.active {
+            display: block;
+        }
+
+        .file-source-badge {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 4px 10px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .file-source-badge.firebase {
+            background: #4285f4;
+            color: white;
+        }
+
+        .file-source-badge.local {
+            background: #34a853;
+            color: white;
+        }
+
+        .search-section {
+            margin-top: 30px;
+        }
+
+        .search-section h3 {
+            color: #212529;
+            margin-bottom: 20px;
+            font-weight: 800;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .os-inputs-container {
+            margin-bottom: 20px;
+        }
+
+        .os-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 18px 25px;
+            border: 2px solid rgba(0, 0, 0, 0.15);
+            border-radius: 15px;
+            font-size: 16px;
+            font-family: 'Poppins', sans-serif;
+            background: white;
+            color: #212529;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #212529;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-remove-os {
+            padding: 18px 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-remove-os:hover {
+            background: #c82333;
+            transform: scale(1.05);
+        }
+
+        .btn-add-os {
+            padding: 14px 25px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 14px;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-add-os:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .search-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .btn-search {
+            padding: 18px 40px;
+            background: linear-gradient(135deg, #212529 0%, #343a40 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: all 0.4s;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            white-space: nowrap;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-clear {
+            padding: 18px 40px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: all 0.4s;
+        }
+
+        .btn-clear:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .filter-urgency-section {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #ffc107;
+            display: none;
+        }
+
+        .filter-urgency-section.active {
+            display: block;
+        }
+
+        .filter-urgency-section h4 {
+            color: #856404;
+            font-weight: 800;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .urgency-filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .urgency-btn {
+            padding: 12px 24px;
+            border: 2px solid;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 13px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .urgency-btn.urgent {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+
+        .urgency-btn.urgent:hover,
+        .urgency-btn.urgent.active {
+            background: #dc3545;
+            color: white;
+        }
+
+        .urgency-btn.warning {
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        .urgency-btn.warning:hover,
+        .urgency-btn.warning.active {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .urgency-btn.safe {
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .urgency-btn.safe:hover,
+        .urgency-btn.safe.active {
+            background: #28a745;
+            color: white;
+        }
+
+        .urgency-btn.all {
+            border-color: #212529;
+            color: #212529;
+        }
+
+        .urgency-btn.all:hover,
+        .urgency-btn.all.active {
+            background: #212529;
+            color: white;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .btn-export {
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 123, 255, 0.3);
+        }
+
+        .btn-send-email {
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-send-email:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.3);
+        }
+
+        .filter-section {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #ffc107;
+            display: none;
+        }
+
+        .filter-section.active {
+            display: block;
+        }
+
+        .filter-section h4 {
+            color: #856404;
+            font-weight: 800;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-input {
+            padding: 12px 18px;
+            border: 2px solid #856404;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #212529;
+        }
+
+        .btn-filter {
+            padding: 12px 25px;
+            background: #ffc107;
+            color: #212529;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-filter:hover {
+            background: #ffb300;
+            transform: translateY(-2px);
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            border: 2px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-top: 30px;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .result-os {
+            font-size: 2em;
+            font-weight: 900;
+            color: #212529;
+        }
+
+        .status-badge {
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .status-badge.pendentes {
+            background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+            color: #212529;
+        }
+
+        .status-badge.todos-entregues {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .items-list {
+            margin-top: 25px;
+        }
+
+        .item-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #495057;
+            transition: all 0.3s;
+        }
+
+        .item-card.urgent {
+            border-left-color: #dc3545;
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(232, 202, 210, 0.1) 100%);
+        }
+
+        .item-card.warning {
+            border-left-color: #ffc107;
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 240, 159, 0.1) 100%);
+        }
+
+        .item-card.safe {
+            border-left-color: #28a745;
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(200, 230, 201, 0.1) 100%);
+        }
+
+        .item-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .item-description {
+            flex: 1;
+            font-weight: 700;
+            font-size: 15px;
+            color: #212529;
+            line-height: 1.5;
+        }
+
+        .item-status {
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .item-status.recusada {
+            background: #dc3545;
+            color: white;
+        }
+
+        .item-status.pendente {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .item-status.emitido {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .item-footer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
+        }
+
+        .item-date {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #495057;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .date-highlight {
+            background: #fff3cd;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 800;
+            color: #856404;
+        }
+
+        .urgency-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .urgency-badge.urgent {
+            background: #dc3545;
+            color: white;
+        }
+
+        .urgency-badge.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .urgency-badge.safe {
+            background: #28a745;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state h3 {
+            font-size: 1.8em;
+            font-weight: 800;
+            margin-bottom: 10px;
+            color: #212529;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+        }
+
+        .all-delivered {
+            text-align: center;
+            padding: 40px 20px;
+            background: #d4edda;
+            border-radius: 15px;
+            border: 2px solid #28a745;
+        }
+
+        .all-delivered h3 {
+            font-size: 1.5em;
+            font-weight: 800;
+            color: #155724;
+            margin-bottom: 10px;
+        }
+
+        .all-delivered p {
+            color: #155724;
+            font-size: 15px;
+        }
+
+        .no-items-in-range {
+            text-align: center;
+            padding: 40px 20px;
+            background: #fff3cd;
+            border-radius: 15px;
+            border: 2px solid #ffc107;
+        }
+
+        .no-items-in-range h3 {
+            font-size: 1.5em;
+            font-weight: 800;
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .no-items-in-range p {
+            color: #856404;
+            font-size: 15px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-weight: 700;
+            max-width: 400px;
+            z-index: 10000;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: slideInRight 0.4s ease;
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.95), rgba(32, 201, 151, 0.95));
+            color: white;
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.95), rgba(200, 35, 51, 0.95));
+            color: white;
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, rgba(33, 150, 243, 0.95), rgba(21, 101, 192, 0.95));
+            color: white;
+        }
+
+        .items-count {
+            text-align: center;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 700;
+            color: #856404;
+        }
+
+        .email-input-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .email-input-group {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .email-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: #212529;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        .email-input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .email-input-group input:focus {
+            outline: none;
+            border-color: #212529;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2.2em; }
+            .search-actions { flex-direction: column; }
+            .btn-search, .btn-clear { width: 100%; }
+            .export-buttons { flex-direction: column; }
+            .btn-export, .btn-send-email { width: 100%; justify-content: center; }
+            .item-header { flex-direction: column; }
+            .os-input-group { flex-direction: column; }
+            .filter-controls { flex-direction: column; align-items: stretch; }
+            .urgency-filter-buttons { flex-direction: column; }
+            .urgency-btn { width: 100%; }
+            .email-input-container { flex-direction: column; }
+            .email-input-group { min-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-buttons">
+            <button class="btn-dashboard" onclick="window.location.href='index.html'">🏠 Dashboard</button>
+        </div>
+
+        <div class="header">
+            <h1>🛒 Gerenciador de Compras</h1>
+            <p>Sistema Integrado de Controle de Entregas - O.S.</p>
+        </div>
+
+        <div class="glass-card">
+            <div class="upload-section">
+                <h3>📂 Upload de Planilha Excel</h3>
+                <p>Faça upload do arquivo <strong>Lista de Solicitação de Materiais</strong> (.xls ou .xlsx)</p>
+                <div class="file-input-wrapper">
+                    <input type="file" id="excelFile" accept=".xlsx, .xls" onchange="processarExcel(this)">
+                    <label for="excelFile" class="file-input-label">
+                        📤 Selecionar Arquivo Excel
+                    </label>
+                </div>
+                <div id="fileName" class="file-name"></div>
+                <div id="fileInfo" class="file-info">
+                    💾 Planilha salva com sucesso!
+                    <span id="fileSourceBadge" class="file-source-badge"></span>
+                </div>
+            </div>
+
+            <div class="search-section">
+                <h3>🔍 Consultar O.S.</h3>
+                
+                <div id="osInputsContainer" class="os-inputs-container">
+                    <div class="os-input-group">
+                        <input type="text" class="search-input os-input" placeholder="Digite o número da O.S. (ex: 20920)" onkeypress="if(event.key === 'Enter') buscarOS()" oninput="salvarOSAoDigitar(this)">
+                    </div>
+                </div>
+
+                <button class="btn-add-os" onclick="adicionarCampoOS()">➕ Adicionar Outra O.S.</button>
+
+                <div class="search-actions">
+                    <button class="btn-search" onclick="buscarOS()">🔎 Buscar</button>
+                    <button class="btn-clear" onclick="limparBusca()">🗑️ Limpar</button>
+                </div>
+
+                <div id="exportSection" class="export-buttons" style="display: none;">
+                    <button class="btn-export" onclick="exportarExcel()">📊 Exportar para Excel</button>
+                    <button class="btn-export" onclick="exportarPDF()">📄 Exportar para PDF</button>
+                    <button class="btn-send-email" onclick="abrirEnvioEmail()">📧 Enviar por Email</button>
+                </div>
+
+                <!-- Entrada de Email -->
+                <div id="emailSection" class="email-input-container" style="display: none;">
+                    <div class="email-input-group">
+                        <label>📧 Email para Envio</label>
+                        <input type="email" id="emailDestino" placeholder="exemplo@email.com" />
+                    </div>
+                    <button class="btn-send-email" onclick="confirmarEnvioEmail()" style="padding: 12px 24px; height: fit-content;">✉️ Enviar</button>
+                    <button class="btn-clear" onclick="fecharEnvioEmail()" style="padding: 12px 24px; height: fit-content; background: #6c757d;">❌ Cancelar</button>
+                </div>
+
+                <!-- Filtro de Urgência -->
+                <div id="filterUrgencySection" class="filter-urgency-section">
+                    <h4>⚡ Filtrar por Urgência</h4>
+                    <div class="urgency-filter-buttons">
+                        <button class="urgency-btn all active" onclick="filtrarPorUrgencia('all')">📋 Todos</button>
+                        <button class="urgency-btn urgent" onclick="filtrarPorUrgencia('urgent')">🔴 Atrasadas</button>
+                        <button class="urgency-btn warning" onclick="filtrarPorUrgencia('warning')">🟡 No Prazo</button>
+                        <button class="urgency-btn safe" onclick="filtrarPorUrgencia('safe')">🟢 Tranquilas</button>
+                    </div>
+                </div>
+
+                <!-- Filtro de Data -->
+                <div id="filterSection" class="filter-section">
+                    <h4>🗓️ Filtrar por Data de Entrega</h4>
+                    <div class="filter-controls">
+                        <label style="font-weight: 600; color: #856404;">De:</label>
+                        <input type="date" id="dataInicio" class="filter-input">
+                        <label style="font-weight: 600; color: #856404;">Até:</label>
+                        <input type="date" id="dataFim" class="filter-input">
+                        <button class="btn-filter" onclick="aplicarFiltroData()">Aplicar Filtro</button>
+                        <button class="btn-filter" onclick="limparFiltroData()">Limpar Filtro</button>
+                    </div>
+                </div>
+
+                <div id="resultadoContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let dadosExcel = [];
+        let resultadosBusca = [];
+        let osFrequentes = [];
+        let arquivoSource = 'local';
+        let filtroUrgenciaAtivo = 'all';
+
+        const EMAIL_CONFIG = {
+            serviceId: 'service_k842br2',
+            templateId: 'template_epk32wl',
+            publicKey: 'SemwnDhUgHqJ1l0VG'
+        };
+
+        // ===== FUNÇÕES DE EMAIL CORRIGIDAS =====
+        function abrirEnvioEmail() {
+            if (resultadosBusca.length === 0) {
+                mostrarNotificacao('⚠️ Realize uma busca primeiro', 'error');
+                return;
+            }
+            document.getElementById('emailSection').style.display = 'flex';
+            document.getElementById('emailDestino').focus();
+        }
+
+        function fecharEnvioEmail() {
+            document.getElementById('emailSection').style.display = 'none';
+            document.getElementById('emailDestino').value = '';
+        }
+
+        function confirmarEnvioEmail() {
+            const email = document.getElementById('emailDestino').value.trim();
+            
+            if (!email) {
+                mostrarNotificacao('⚠️ Digite um email válido', 'error');
+                return;
+            }
+
+            if (!validarEmail(email)) {
+                mostrarNotificacao('⚠️ Email inválido', 'error');
+                return;
+            }
+
+            enviarEmailComEmailJS(email);
+        }
+
+        function validarEmail(email) {
+            return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+        }
+
+        function enviarEmailComEmailJS(emailDestino) {
+            mostrarNotificacao('📤 Enviando...', 'info');
+
+            // Calcular estatísticas
+            let totalPendencias = 0;
+            let totalAtrasadas = 0;
+            let totalNoPrazo = 0;
+
+            resultadosBusca.forEach(resultado => {
+                totalPendencias += resultado.itens.length;
+                resultado.itens.forEach(item => {
+                    const urgencia = calcularUrgencia(item['Dt. Previsão de Entrega']);
+                    if (urgencia === 'urgent') totalAtrasadas++;
+                    if (urgencia === 'warning') totalNoPrazo++;
+                });
+            });
+
+            // Gerar lista formatada
+            let pendenciasLista = '';
+            resultadosBusca.forEach(resultado => {
+                const { numeroOS, itens, totalItens } = resultado;
+
+                if (itens.length === 0) {
+                    pendenciasLista += `O.S. ${numeroOS} - ✅ TODOS ENTREGUES (${totalItens} itens)\n\n`;
+                } else {
+                    pendenciasLista += `O.S. ${numeroOS} - ⏳ ${itens.length} PENDENTE(S) de ${totalItens}\n`;
+                    pendenciasLista += `${'─'.repeat(80)}\n`;
+
+                    itens.forEach(item => {
+                        const descricao = item['Descrição Produto'] || 'Descrição não informada';
+                        const status = item['Status Entrega'] || 'Status não informado';
+                        const dataEntrega = converterDataExcel(item['Dt. Previsão de Entrega']) || 'Não informada';
+                        const urgencia = calcularUrgencia(item['Dt. Previsão de Entrega']);
+
+                        let urgencyLabel = '';
+                        if (urgencia === 'urgent') {
+                            urgencyLabel = ' 🔴 ATRASADO';
+                        } else if (urgencia === 'warning') {
+                            urgencyLabel = ' 🟡 NO PRAZO';
+                        } else if (urgencia === 'safe') {
+                            urgencyLabel = ' 🟢 TRANQUILO';
+                        }
+
+                        pendenciasLista += `📦 ${descricao}\n`;
+                        pendenciasLista += `   Status: ${status}\n`;
+                        pendenciasLista += `   Previsão: ${dataEntrega}${urgencyLabel}\n\n`;
+                    });
+
+                    pendenciasLista += `${'═'.repeat(80)}\n\n`;
+                }
+            });
+
+            // Preparar parâmetros para o template
+            const templateParams = {
+                to_email: emailDestino,
+                title: `Relatório O.S. ${new Date().toLocaleDateString('pt-BR')}`,
+                data_envio: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR'),
+                total_pendencias: totalPendencias,
+                total_atrasadas: totalAtrasadas,
+                total_no_prazo: totalNoPrazo,
+                pendencias_lista: pendenciasLista
+            };
+
+            console.log('Enviando com parâmetros:', templateParams);
+
+            emailjs.send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, templateParams)
+                .then(response => {
+                    console.log('✅ Email enviado com sucesso:', response);
+                    mostrarNotificacao('✅ Email enviado com sucesso!', 'success');
+                    fecharEnvioEmail();
+                })
+                .catch(error => {
+                    console.error('❌ Erro ao enviar email:', error);
+                    let mensagemErro = '❌ Erro ao enviar email';
+                    
+                    if (error.text) {
+                        mensagemErro += `: ${error.text}`;
+                    } else if (error.message) {
+                        mensagemErro += `: ${error.message}`;
+                    }
+                    
+                    mostrarNotificacao(mensagemErro, 'error');
+                });
+        }
+
+        // Salvar O.S. ao digitar
+        function salvarOSAoDigitar(input) {
+            const valor = input.value.trim();
+            
+            if (valor && valor.length > 0) {
+                const existe = osFrequentes.find(os => os.numero === valor);
+                if (!existe) {
+                    salvarOSFirebase(valor);
+                }
+            }
+        }
+
+        // Salvar O.S. no Firebase
+        function salvarOSFirebase(numeroOS) {
+            try {
+                const id = 'os_' + numeroOS + '_' + Date.now();
+                const novaOS = {
+                    numero: numeroOS,
+                    dataSalva: new Date().toLocaleString('pt-BR')
+                };
+
+                window.firebaseSet(
+                    window.firebaseRef(window.firebaseDB, `gerenciador_compras/os_frequentes/${id}`),
+                    novaOS
+                ).catch(error => {
+                    console.error('Erro ao salvar O.S.:', error);
+                });
+            } catch (e) {
+                console.error('Erro ao salvar O.S.:', e);
+            }
+        }
+
+        // Carregar dados ao iniciar
+        function carregarDadosSalvos() {
+            carregarExcelFirebase();
+            carregarOSFrequentes();
+        }
+
+        // Carregar Excel do Firebase
+        function carregarExcelFirebase() {
+            const excelRef = window.firebaseRef(window.firebaseDB, 'gerenciador_compras/excel_atual');
+            
+            window.firebaseOnValue(excelRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const dados = snapshot.val();
+                    try {
+                        dadosExcel = descomprimirDados(dados.dados);
+                        arquivoSource = 'firebase';
+                        document.getElementById('fileName').textContent = `📄 ${dados.nome}`;
+                        document.getElementById('fileInfo').classList.add('active');
+                        document.getElementById('fileSourceBadge').textContent = 'FIREBASE';
+                        document.getElementById('fileSourceBadge').className = 'file-source-badge firebase';
+                    } catch (e) {
+                        console.error('Erro ao descomprimir dados do Firebase:', e);
+                    }
+                }
+            });
+        }
+
+        // Carregar O.S. frequentes do Firebase
+        function carregarOSFrequentes() {
+            const osRef = window.firebaseRef(window.firebaseDB, 'gerenciador_compras/os_frequentes');
+            window.firebaseOnValue(osRef, (snapshot) => {
+                osFrequentes = [];
+                if (snapshot.exists()) {
+                    const dados = snapshot.val();
+                    osFrequentes = Object.keys(dados).map(key => ({
+                        id: key,
+                        numero: dados[key].numero,
+                        dataSalva: dados[key].dataSalva
+                    })).sort((a, b) => new Date(b.dataSalva) - new Date(a.dataSalva));
+                }
+            });
+        }
+
+        // Comprimir dados
+        function comprimirDados(dados) {
+            const jsonString = JSON.stringify(dados);
+            const compressed = pako.gzip(jsonString);
+            let binaryString = '';
+            for (let i = 0; i < compressed.length; i++) {
+                binaryString += String.fromCharCode(compressed[i]);
+            }
+            return btoa(binaryString);
+        }
+
+        // Descomprimir dados
+        function descomprimirDados(compressedBase64) {
+            try {
+                const binaryString = atob(compressedBase64);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                const decompressed = pako.ungzip(bytes, { to: 'string' });
+                return JSON.parse(decompressed);
+            } catch (e) {
+                console.error('Erro ao descomprimir:', e);
+                return null;
+            }
+        }
+
+        // Salvar Excel no Firebase
+        function salvarExcelFirebase(jsonData, nomeArquivo) {
+            try {
+                const comprimido = comprimirDados(jsonData);
+                const excelRef = window.firebaseRef(window.firebaseDB, 'gerenciador_compras/excel_atual');
+                
+                window.firebaseSet(excelRef, {
+                    dados: comprimido,
+                    nome: nomeArquivo,
+                    dataSalva: new Date().toLocaleString('pt-BR'),
+                    tamanho: comprimido.length
+                });
+
+                mostrarNotificacao(`✅ Planilha salva no Firebase`, 'info');
+            } catch (e) {
+                console.error('Erro ao salvar no Firebase:', e);
+                mostrarNotificacao('⚠️ Erro ao salvar no Firebase', 'error');
+            }
+        }
+
+        // Processar arquivo Excel
+        function processarExcel(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            document.getElementById('fileName').textContent = `📄 ${file.name}`;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { 
+                        range: 2,
+                        defval: ''
+                    });
+                    
+                    if (jsonData.length === 0) {
+                        mostrarNotificacao('❌ Planilha vazia ou sem dados', 'error');
+                        return;
+                    }
+
+                    dadosExcel = jsonData;
+                    arquivoSource = 'local';
+                    
+                    salvarExcelFirebase(jsonData, file.name);
+                    
+                    try {
+                        localStorage.setItem('excelDataCache', JSON.stringify(jsonData));
+                        localStorage.setItem('excelFileName', file.name);
+                    } catch (storageError) {
+                        console.warn('Não foi possível salvar no localStorage');
+                    }
+                    
+                    document.getElementById('fileInfo').classList.add('active');
+                    document.getElementById('fileSourceBadge').textContent = 'LOCAL';
+                    document.getElementById('fileSourceBadge').className = 'file-source-badge local';
+                    mostrarNotificacao(`✅ Planilha carregada! ${dadosExcel.length} registros.`, 'success');
+                    
+                } catch (error) {
+                    console.error('Erro ao processar Excel:', error);
+                    mostrarNotificacao('❌ Erro ao processar arquivo Excel', 'error');
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Adicionar campo de O.S.
+        function adicionarCampoOS() {
+            const container = document.getElementById('osInputsContainer');
+            const div = document.createElement('div');
+            div.className = 'os-input-group';
+            div.innerHTML = `
+                <input type="text" class="search-input os-input" placeholder="Digite o número da O.S." onkeypress="if(event.key === 'Enter') buscarOS()" oninput="salvarOSAoDigitar(this)">
+                <button class="btn-remove-os" onclick="removerCampoOS(this)">✖</button>
+            `;
+            container.appendChild(div);
+        }
+
+        // Remover campo de O.S.
+        function removerCampoOS(btn) {
+            btn.parentElement.remove();
+        }
+
+        // Converter data do Excel
+        function converterDataExcel(numeroExcel) {
+            if (!numeroExcel || numeroExcel === '' || isNaN(numeroExcel)) {
+                return null;
+            }
+            
+            const dataBase = new Date(1899, 11, 30);
+            const dias = Math.floor(numeroExcel);
+            const dataResultado = new Date(dataBase.getTime() + dias * 24 * 60 * 60 * 1000);
+            
+            const dia = String(dataResultado.getDate()).padStart(2, '0');
+            const mes = String(dataResultado.getMonth() + 1).padStart(2, '0');
+            const ano = dataResultado.getFullYear();
+            
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        // Converter data do Excel para Date
+        function converterDataExcelParaDate(numeroExcel) {
+            if (!numeroExcel || numeroExcel === '' || isNaN(numeroExcel)) {
+                return null;
+            }
+            
+            const dataBase = new Date(1899, 11, 30);
+            const dias = Math.floor(numeroExcel);
+            const dataResultado = new Date(dataBase.getTime() + dias * 24 * 60 * 60 * 1000);
+            dataResultado.setHours(0, 0, 0, 0);
+            return dataResultado;
+        }
+
+        // Calcular urgência
+        function calcularUrgencia(dataExcel) {
+            const dataItem = converterDataExcelParaDate(dataExcel);
+            if (!dataItem) return 'sem-data';
+
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            
+            const diasDiferenca = Math.floor((dataItem - hoje) / (1000 * 60 * 60 * 24));
+            
+            if (diasDiferenca < 0) {
+                return 'urgent';
+            } else if (diasDiferenca <= 7) {
+                return 'warning';
+            } else {
+                return 'safe';
+            }
+        }
+
+        // Buscar O.S.
+        function buscarOS() {
+            const inputs = document.querySelectorAll('.os-input');
+            const numerosOS = [];
+            
+            inputs.forEach(input => {
+                const valor = input.value.trim();
+                if (valor && !numerosOS.includes(valor)) {
+                    numerosOS.push(valor);
+                }
+            });
+
+            if (numerosOS.length === 0) {
+                mostrarNotificacao('⚠️ Digite pelo menos um número de O.S.', 'error');
+                return;
+            }
+
+            if (dadosExcel.length === 0) {
+                mostrarNotificacao('⚠️ Faça upload da planilha Excel primeiro', 'error');
+                return;
+            }
+
+            resultadosBusca = [];
+
+            numerosOS.forEach(numeroOS => {
+                const todosItens = dadosExcel.filter(item => {
+                    const numero = item['Nro. OS'];
+                    return numero && String(numero).trim() === String(numeroOS).trim();
+                });
+
+                if (todosItens.length > 0) {
+                    const itensNaoEntregues = todosItens.filter(item => {
+                        const status = item['Status Entrega'];
+                        return status && String(status).toLowerCase() !== 'pedido entregue';
+                    });
+
+                    resultadosBusca.push({
+                        numeroOS: numeroOS,
+                        itens: itensNaoEntregues,
+                        totalItens: todosItens.length
+                    });
+                }
+            });
+
+            if (resultadosBusca.length === 0) {
+                document.getElementById('resultadoContainer').innerHTML = `
+                    <div class="result-card">
+                        <div class="empty-state">
+                            <h3>❌ Nenhuma O.S. encontrada</h3>
+                            <p>Verifique se os números estão corretos.</p>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('filterUrgencySection').classList.remove('active');
+                document.getElementById('filterSection').classList.remove('active');
+                document.getElementById('exportSection').style.display = 'none';
+                return;
+            }
+
+            exibirResultados();
+            document.getElementById('filterUrgencySection').classList.add('active');
+            document.getElementById('filterSection').classList.add('active');
+            document.getElementById('exportSection').style.display = 'flex';
+            document.getElementById('emailSection').style.display = 'none';
+        }
+
+        // Filtrar por urgência
+        function filtrarPorUrgencia(tipo) {
+            filtroUrgenciaAtivo = tipo;
+
+            document.querySelectorAll('.urgency-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            if (tipo === 'all') {
+                exibirResultados();
+            } else {
+                const resultadosFiltrados = resultadosBusca.map(resultado => {
+                    const itensFiltrados = resultado.itens.filter(item => {
+                        const urgencia = calcularUrgencia(item['Dt. Previsão de Entrega']);
+                        return urgencia === tipo;
+                    });
+
+                    return {
+                        ...resultado,
+                        itens: itensFiltrados,
+                        filtroAplicado: true
+                    };
+                });
+
+                exibirResultados(resultadosFiltrados);
+            }
+        }
+
+        // Exibir resultados
+        function exibirResultados(dadosFiltrados = null) {
+            const dados = dadosFiltrados || resultadosBusca;
+            let html = '';
+
+            dados.forEach(resultado => {
+                const { numeroOS, itens, totalItens, filtroAplicado } = resultado;
+
+                if (itens.length === 0) {
+                    if (filtroAplicado) {
+                        html += `
+                            <div class="result-card">
+                                <div class="result-header">
+                                    <div class="result-os">O.S. ${numeroOS}</div>
+                                    <span class="status-badge pendentes">⚠️ SEM ITENS NO FILTRO</span>
+                                </div>
+                                <div class="no-items-in-range">
+                                    <h3>📅 Nenhum item neste filtro</h3>
+                                    <p>Não há itens com essa urgência para esta O.S.</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="result-card">
+                                <div class="result-header">
+                                    <div class="result-os">O.S. ${numeroOS}</div>
+                                    <span class="status-badge todos-entregues">✅ TODOS ENTREGUES</span>
+                                </div>
+                                <div class="all-delivered">
+                                    <h3>🎉 Todos os ${totalItens} itens foram entregues!</h3>
+                                    <p>Esta O.S. não possui pendências de entrega.</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    let itensHTML = '';
+                    itens.forEach(item => {
+                        const descricao = item['Descrição Produto'] || 'Descrição não informada';
+                        const statusEntrega = item['Status Entrega'] || 'Status não informado';
+                        const dataEntrega = item['Dt. Previsão de Entrega'];
+                        const dataFormatada = converterDataExcel(dataEntrega) || 'Não informada';
+                        const urgencia = calcularUrgencia(dataEntrega);
+                        
+                        let statusClasse = 'pendente';
+                        const statusLower = String(statusEntrega).toLowerCase();
+                        
+                        if (statusLower.includes('recusada') || statusLower.includes('recusado')) {
+                            statusClasse = 'recusada';
+                        } else if (statusLower.includes('emitido')) {
+                            statusClasse = 'emitido';
+                        }
+
+                        let urgencyText = '';
+                        if (urgencia === 'urgent') {
+                            urgencyText = '<span class="urgency-badge urgent">🔴 ATRASADO</span>';
+                        } else if (urgencia === 'warning') {
+                            urgencyText = '<span class="urgency-badge warning">🟡 NO PRAZO</span>';
+                        } else if (urgencia === 'safe') {
+                            urgencyText = '<span class="urgency-badge safe">🟢 TRANQUILO</span>';
+                        }
+
+                        itensHTML += `
+                            <div class="item-card ${urgencia}">
+                                <div class="item-header">
+                                    <div class="item-description">📦 ${descricao}</div>
+                                    <span class="item-status ${statusClasse}">${statusEntrega}</span>
+                                </div>
+                                <div class="item-footer">
+                                    <span class="item-date-icon">📅</span>
+                                    <div class="item-date">
+                                        Previsão: <span class="date-highlight">${dataFormatada}</span>
+                                        ${urgencyText}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                        <div class="result-card">
+                            <div class="result-header">
+                                <div class="result-os">O.S. ${numeroOS}</div>
+                                <span class="status-badge pendentes">⏳ ${itens.length} PENDENTE${itens.length > 1 ? 'S' : ''}</span>
+                            </div>
+                            <div class="items-count">
+                                📋 Mostrando ${itens.length} de ${totalItens} itens${filtroAplicado ? ' (filtrados)' : ` (${totalItens - itens.length} entregues)`}
+                            </div>
+                            <div class="items-list">
+                                ${itensHTML}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            document.getElementById('resultadoContainer').innerHTML = html;
+        }
+
+        // Aplicar filtro de data
+        function aplicarFiltroData() {
+            const dataInicio = document.getElementById('dataInicio').value;
+            const dataFim = document.getElementById('dataFim').value;
+
+            if (!dataInicio && !dataFim) {
+                mostrarNotificacao('⚠️ Selecione pelo menos uma data', 'error');
+                return;
+            }
+
+            const resultadosFiltrados = resultadosBusca.map(resultado => {
+                const itensFiltrados = resultado.itens.filter(item => {
+                    const dataItem = converterDataExcelParaDate(item['Dt. Previsão de Entrega']);
+                    
+                    if (!dataItem) {
+                        return false;
+                    }
+
+                    const inicio = dataInicio ? new Date(dataInicio + 'T00:00:00') : null;
+                    const fim = dataFim ? new Date(dataFim + 'T00:00:00') : null;
+
+                    if (inicio && fim) {
+                        return dataItem >= inicio && dataItem <= fim;
+                    } else if (inicio) {
+                        return dataItem >= inicio;
+                    } else if (fim) {
+                        return dataItem <= fim;
+                    }
+
+                    return true;
+                });
+
+                return {
+                    ...resultado,
+                    itens: itensFiltrados,
+                    filtroAplicado: true
+                };
+            });
+
+            exibirResultados(resultadosFiltrados);
+            
+            const totalFiltrados = resultadosFiltrados.reduce((sum, r) => sum + r.itens.length, 0);
+            mostrarNotificacao(`✅ Filtro aplicado: ${totalFiltrados} item(ns)`, 'success');
+        }
+
+        // Limpar filtro de data
+        function limparFiltroData() {
+            document.getElementById('dataInicio').value = '';
+            document.getElementById('dataFim').value = '';
+            exibirResultados();
+            mostrarNotificacao('🗑️ Filtro removido', 'success');
+        }
+
+        // Exportar para Excel
+        function exportarExcel() {
+            if (resultadosBusca.length === 0) {
+                mostrarNotificacao('⚠️ Realize uma busca primeiro', 'error');
+                return;
+            }
+
+            const dados = [];
+            dados.push(['O.S.', 'Descrição Produto', 'Status Entrega', 'Data Previsão Entrega', 'Urgência']);
+
+            resultadosBusca.forEach(resultado => {
+                resultado.itens.forEach(item => {
+                    const dataFormatada = converterDataExcel(item['Dt. Previsão de Entrega']) || 'Não informada';
+                    const urgencia = calcularUrgencia(item['Dt. Previsão de Entrega']);
+                    
+                    let urgencyLabel = '';
+                    if (urgencia === 'urgent') {
+                        urgencyLabel = 'ATRASADO';
+                    } else if (urgencia === 'warning') {
+                        urgencyLabel = 'NO PRAZO';
+                    } else if (urgencia === 'safe') {
+                        urgencyLabel = 'TRANQUILO';
+                    } else {
+                        urgencyLabel = 'SEM DATA';
+                    }
+
+                    dados.push([
+                        resultado.numeroOS,
+                        item['Descrição Produto'],
+                        item['Status Entrega'],
+                        dataFormatada,
+                        urgencyLabel
+                    ]);
+                });
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(dados);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Pendências');
+
+            ws['!cols'] = [
+                { wch: 12 },
+                { wch: 35 },
+                { wch: 25 },
+                { wch: 20 },
+                { wch: 15 }
+            ];
+
+            XLSX.writeFile(wb, `Pendencias_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.xlsx`);
+            mostrarNotificacao('✅ Excel exportado!', 'success');
+        }
+
+        // Exportar para PDF
+        function exportarPDF() {
+            if (resultadosBusca.length === 0) {
+                mostrarNotificacao('⚠️ Realize uma busca primeiro', 'error');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            let yPosition = 15;
+
+            doc.setFontSize(16);
+            doc.text('RELATÓRIO DE PENDÊNCIAS - O.S.', 105, yPosition, { align: 'center' });
+            yPosition += 10;
+
+            doc.setFontSize(10);
+            doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 15, yPosition);
+            yPosition += 8;
+
+            resultadosBusca.forEach(resultado => {
+                const { numeroOS, itens } = resultado;
+
+                if (itens.length === 0) return;
+
+                if (yPosition > 250) {
+                    doc.addPage();
+                    yPosition = 15;
+                }
+
+                doc.setFontSize(12);
+                doc.text(`O.S. ${numeroOS}`, 15, yPosition);
+                yPosition += 5;
+
+                const tableData = itens.map(item => {
+                    const dataFormatada = converterDataExcel(item['Dt. Previsão de Entrega']) || 'N/I';
+                    const urgencia = calcularUrgencia(item['Dt. Previsão de Entrega']);
+                    
+                    let urgencyLabel = '';
+                    if (urgencia === 'urgent') {
+                        urgencyLabel = 'ATRASADO';
+                    } else if (urgencia === 'warning') {
+                        urgencyLabel = 'NO PRAZO';
+                    } else if (urgencia === 'safe') {
+                        urgencyLabel = 'TRANQUILO';
+                    } else {
+                        urgencyLabel = 'SEM DATA';
+                    }
+
+                    return [
+                        item['Descrição Produto'].substring(0, 40),
+                        item['Status Entrega'],
+                        dataFormatada,
+                        urgencyLabel
+                    ];
+                });
+
+                doc.autoTable({
+                    startY: yPosition,
+                    head: [['Descrição', 'Status', 'Data Previsão', 'Urgência']],
+                    body: tableData,
+                    theme: 'grid',
+                    columnStyles: {
+                        0: { cellWidth: 70 },
+                        1: { cellWidth: 40 },
+                        2: { cellWidth: 30 },
+                        3: { cellWidth: 25 }
+                    },
+                    headStyles: {
+                        fillColor: [33, 37, 41],
+                        textColor: 255,
+                        fontSize: 10,
+                        fontStyle: 'bold'
+                    },
+                    bodyStyles: {
+                        fontSize: 9
+                    }
+                });
+
+                yPosition = doc.lastAutoTable.finalY + 10;
+            });
+
+            doc.save(`Pendencias_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`);
+            mostrarNotificacao('✅ PDF exportado!', 'success');
+        }
+
+        // Limpar busca
+        function limparBusca() {
+            document.querySelectorAll('.os-input').forEach(input => input.value = '');
+            document.getElementById('resultadoContainer').innerHTML = '';
+            document.getElementById('filterUrgencySection').classList.remove('active');
+            document.getElementById('filterSection').classList.remove('active');
+            document.getElementById('exportSection').style.display = 'none';
+            document.getElementById('emailSection').style.display = 'none';
+            document.getElementById('dataInicio').value = '';
+            document.getElementById('dataFim').value = '';
+            resultadosBusca = [];
+            
+            const container = document.getElementById('osInputsContainer');
+            while (container.children.length > 1) {
+                container.removeChild(container.lastChild);
+            }
+        }
+
+        // Mostrar notificação
+        function mostrarNotificacao(mensagem, tipo = 'success') {
+            const notificacao = document.createElement('div');
+            notificacao.className = `notification ${tipo}`;
+            notificacao.textContent = mensagem;
+            document.body.appendChild(notificacao);
+            
+            setTimeout(() => {
+                notificacao.remove();
+            }, 3500);
+        }
+
+        // Carregar dados ao iniciar
+        window.addEventListener('load', carregarDadosSalvos);
+    </script>
+</body>
+</html>

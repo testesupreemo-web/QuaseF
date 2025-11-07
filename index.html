@@ -583,6 +583,7 @@
                 <button type="button" class="tab-btn active" id="btn-pendencias">📋 Sistema de Pendências</button>
                 <button type="button" class="tab-btn" id="btn-faturamento">💰 Pendências Faturamento</button>
                 <button type="button" class="tab-btn" id="btn-cronogramas">📅 Cronogramas</button>
+                <button type="button" class="tab-btn" id="btn-compras">🛒 Compras</button>
             </div>
 
             <div id="pendencias-tab" class="tab-content active">
@@ -633,6 +634,18 @@
                     <div class="empty-icon">📅</div>
                     <h3 class="empty-title">Cronogramas</h3>
                     <p class="empty-text">Ferramentas avançadas de cronogramas estão sendo desenvolvidas. Em breve você terá acesso a calendários, planejamento de projetos e linha do tempo interativa.</p>
+                </div>
+            </div>
+
+            <div id="compras-tab" class="tab-content">
+                <div class="content-grid" style="grid-template-columns: 1fr; max-width: 500px;">
+                    <div class="feature-card link" onclick="window.location.href='gerenciarcompras.html';" style="cursor:pointer;">
+                        <span class="icon">🛒</span>
+                        <h3 class="feature-title">Gerenciador de Compras</h3>
+                        <p class="feature-description">Sistema completo para controle de compras, fornecedores, pedidos e estoque com rastreamento em tempo real.</p>
+                        <span class="feature-status active">Ativo</span>
+                        <button class="btn-access" type="button" onclick="event.stopPropagation(); window.location.href='gerenciarcompras.html';">Acessar Sistema</button>
+                    </div>
                 </div>
             </div>
 
@@ -708,13 +721,15 @@
             const btnPendencias = document.getElementById('btn-pendencias');
             const btnFaturamento = document.getElementById('btn-faturamento');
             const btnCronogramas = document.getElementById('btn-cronogramas');
+            const btnCompras = document.getElementById('btn-compras');
 
             const tabPendencias = document.getElementById('pendencias-tab');
             const tabFaturamento = document.getElementById('faturamento-tab');
             const tabCronogramas = document.getElementById('cronogramas-tab');
+            const tabCompras = document.getElementById('compras-tab');
 
-            const allButtons = [btnPendencias, btnFaturamento, btnCronogramas];
-            const allTabs = [tabPendencias, tabFaturamento, tabCronogramas];
+            const allButtons = [btnPendencias, btnFaturamento, btnCronogramas, btnCompras];
+            const allTabs = [tabPendencias, tabFaturamento, tabCronogramas, tabCompras];
 
             function hideAllTabs() {
                 allTabs.forEach(tab => tab.classList.remove('active'));
@@ -736,6 +751,12 @@
             btnCronogramas.addEventListener('click', function() {
                 hideAllTabs();
                 tabCronogramas.classList.add('active');
+                this.classList.add('active');
+            });
+
+            btnCompras.addEventListener('click', function() {
+                hideAllTabs();
+                tabCompras.classList.add('active');
                 this.classList.add('active');
             });
         })();
