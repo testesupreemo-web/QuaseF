@@ -17,6 +17,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getDatabase, ref, set, onValue, update, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyAz0AnZ_-IImzWZioHy940uukfpFlZVR2o",
@@ -25,11 +26,14 @@
             projectId: "planilha-suprema-5bd7f",
             storageBucket: "planilha-suprema-5bd7f.firebasestorage.app",
             messagingSenderId: "760644555297",
-            appId: "1:760644555297:web:c538ac1e23df00f5af0960"
+            appId: "1:760644555297:web:c538ac1e23df00f5af0960",
+            measurementId: "G-VKDWWGSHGT"
         };
 
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
+        const analytics = getAnalytics(app);
+        
         window.firebaseDB = database;
         window.firebaseRef = ref;
         window.firebaseSet = set;
@@ -49,7 +53,7 @@
     <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         
         * {
             margin: 0;
@@ -58,144 +62,130 @@
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 50%, #f0f0f0 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #ffffff;
             min-height: 100vh;
-            padding: 40px 20px;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(100, 100, 100, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(50, 50, 50, 0.05) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-        }
-
-        .header-buttons {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-
-        .btn-dashboard {
-            background: linear-gradient(135deg, #212529 0%, #343a40 100%);
-            color: white;
-            padding: 14px 28px;
-            border: none;
-            border-radius: 15px;
-            cursor: pointer;
-            font-weight: 800;
-            font-size: 14px;
-            transition: all 0.4s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-dashboard:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .header {
-            text-align: center;
-            background: white;
-            border: 3px solid #212529;
-            padding: 50px 40px;
-            border-radius: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-            margin-bottom: 30px;
-            animation: fadeInDown 0.6s ease-out;
-        }
-
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .header h1 {
-            font-size: 3.2em;
-            font-weight: 900;
-            margin-bottom: 12px;
-            background: linear-gradient(135deg, #212529 0%, #495057 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -2px;
-        }
-
-        .header p {
-            color: #495057;
-            font-size: 1.2em;
-            font-weight: 500;
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            border: 2px solid rgba(0, 0, 0, 0.1);
-            border-radius: 30px;
-            padding: 40px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-            animation: fadeInUp 0.6s ease-out;
-        }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .upload-section {
-            background: linear-gradient(135deg, rgba(52, 58, 64, 0.05), rgba(255, 255, 255, 0.95));
-            border: 2px solid #495057;
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        .upload-section h3 {
-            color: #212529;
-            margin-bottom: 15px;
-            font-weight: 800;
-            font-size: 1.5em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-        }
-
-        .upload-section p {
-            color: #495057;
-            font-size: 15px;
-            margin-bottom: 20px;
+            padding: 30px 20px;
             line-height: 1.6;
         }
 
-        .file-input-wrapper {
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* ===== HEADER ===== */
+        .main-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 24px;
+            padding: 50px 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+            text-align: center;
+        }
+
+        .main-header h1 {
+            font-size: 2.8em;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .main-header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.15em;
+            font-weight: 500;
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            border: 1px solid #f0f0f0;
+        }
+
+        .card-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f5f5f5;
+        }
+
+        .card-header h2 {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .card-header p {
+            color: #666;
+            font-size: 0.95em;
+            font-weight: 400;
+        }
+
+        /* ===== UPLOAD SECTION ===== */
+        .upload-area {
+            background: linear-gradient(135deg, #f8f9fe 0%, #f0f2ff 100%);
+            border: 2px dashed #d0d7ff;
+            border-radius: 20px;
+            padding: 50px;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
             position: relative;
-            display: inline-block;
-            width: 100%;
-            max-width: 400px;
+            overflow: hidden;
+        }
+
+        .upload-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .upload-area:hover::before {
+            opacity: 1;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.15);
+        }
+
+        .upload-area.active {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+
+        .upload-icon {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.2));
+        }
+
+        .upload-area h3 {
+            color: #1a1a1a;
+            font-size: 1.4em;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .upload-area p {
+            color: #666;
+            font-size: 0.95em;
         }
 
         .file-input-wrapper input[type="file"] {
@@ -203,406 +193,340 @@
             left: -9999px;
         }
 
-        .file-input-label {
-            display: block;
-            padding: 18px 35px;
-            background: linear-gradient(135deg, #212529 0%, #343a40 100%);
+        .file-info-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
-            border-radius: 15px;
-            cursor: pointer;
-            font-weight: 800;
-            font-size: 15px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            transition: all 0.4s;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .file-input-label:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .file-name {
-            margin-top: 15px;
-            color: #28a745;
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        .file-info {
-            margin-top: 15px;
-            padding: 12px;
-            background: #d4edda;
-            border-radius: 10px;
-            color: #155724;
-            font-size: 13px;
+            padding: 12px 24px;
+            border-radius: 12px;
             font-weight: 600;
-            display: none;
+            font-size: 0.95em;
+            margin-top: 20px;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .file-info.active {
-            display: block;
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .file-source-badge {
-            display: inline-block;
-            margin-left: 8px;
-            padding: 4px 10px;
-            border-radius: 50px;
-            font-size: 11px;
-            font-weight: 900;
-            text-transform: uppercase;
+        /* ===== STATUS INFO ===== */
+        .firebase-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 10px 18px;
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            border-radius: 10px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #0c4a6e;
+            border-left: 3px solid #0284c7;
         }
 
-        .file-source-badge.firebase {
-            background: #4285f4;
-            color: white;
+        .firebase-status.loading {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left-color: #f59e0b;
+            color: #78350f;
         }
 
-        .file-source-badge.local {
-            background: #34a853;
-            color: white;
+        /* ===== SEARCH SECTION - MODERNIZADO ===== */
+        .search-card-header {
+            margin-bottom: 30px;
         }
 
-        .search-section {
-            margin-top: 30px;
-        }
-
-        .search-section h3 {
-            color: #212529;
-            margin-bottom: 20px;
-            font-weight: 800;
-            font-size: 1.8em;
+        .search-card-header h2 {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #1a1a1a;
             display: flex;
             align-items: center;
             gap: 12px;
+            margin-bottom: 8px;
         }
 
-        .os-inputs-container {
+        .search-card-header p {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .os-input-wrapper {
+            background: #fafafa;
+            border-radius: 16px;
+            padding: 24px;
             margin-bottom: 20px;
+            border: 1px solid #f0f0f0;
         }
 
         .os-input-group {
             display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 12px;
             align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .os-input-group:last-child {
+            margin-bottom: 0;
         }
 
         .search-input {
             flex: 1;
-            min-width: 200px;
-            padding: 18px 25px;
-            border: 2px solid rgba(0, 0, 0, 0.15);
-            border-radius: 15px;
+            padding: 16px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
             font-size: 16px;
-            font-family: 'Poppins', sans-serif;
-            background: white;
-            color: #212529;
+            font-family: 'Inter', sans-serif;
             font-weight: 500;
-            transition: all 0.3s;
+            color: #1a1a1a;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #ffffff;
         }
 
         .search-input:focus {
             outline: none;
-            border-color: #212529;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
         }
 
-        .btn-remove-os {
-            padding: 18px 20px;
-            background: #dc3545;
-            color: white;
+        .search-input::placeholder {
+            color: #9ca3af;
+        }
+
+        /* ===== BUTTONS - MODERNIZADO E ORGANIZADOS ===== */
+        .btn {
+            padding: 16px 32px;
             border: none;
             border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
             cursor: pointer;
-            font-weight: 800;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-
-        .btn-remove-os:hover {
-            background: #c82333;
-            transform: scale(1.05);
-        }
-
-        .btn-add-os {
-            padding: 14px 25px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 800;
-            font-size: 14px;
-            transition: all 0.3s;
-            margin-bottom: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-transform: none;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 16px 20px;
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 8px 24px rgba(107, 114, 128, 0.4);
+        }
+
+        .btn-outline {
+            background: white;
+            border: 2px solid #e5e7eb;
+            color: #4b5563;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .btn-outline:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: #f8f9fe;
+        }
+
+        /* BOTÕES ORGANIZADOS EM GRID */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .action-buttons .btn {
+            width: 100%;
+        }
+
+        /* ===== FILTER SECTION - MODERNIZADO ===== */
+        .filter-section {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-radius: 20px;
+            padding: 28px;
+            margin-top: 28px;
+            border: 2px solid #fbbf24;
+            box-shadow: 0 4px 16px rgba(251, 191, 36, 0.15);
+        }
+
+        .filter-section h3 {
+            color: #92400e;
+            font-size: 1.25em;
+            font-weight: 800;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 14px 28px;
+            border: 2px solid transparent;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .filter-btn.all {
+            border-color: #4b5563;
+            color: #1f2937;
+        }
+
+        .filter-btn.all:hover,
+        .filter-btn.all.active {
+            background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+            color: white;
+            border-color: #4b5563;
+        }
+
+        .filter-btn.urgent {
+            border-color: #ef4444;
+            color: #dc2626;
+        }
+
+        .filter-btn.urgent:hover,
+        .filter-btn.urgent.active {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border-color: #ef4444;
+        }
+
+        .filter-btn.warning {
+            border-color: #10b981;
+            color: #059669;
+        }
+
+        .filter-btn.warning:hover,
+        .filter-btn.warning.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-color: #10b981;
+        }
+
+        /* ===== DATE FILTER - MODERNIZADO ===== */
+        .date-filter {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 28px;
+            margin-top: 24px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .date-filter h4 {
+            color: #1a1a1a;
+            font-weight: 700;
+            margin-bottom: 20px;
+            font-size: 1.15em;
+            display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .btn-add-os:hover {
-            background: #218838;
-            transform: translateY(-2px);
+        .date-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            align-items: end;
         }
 
-        .search-actions {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
-        .btn-search {
-            padding: 18px 40px;
-            background: linear-gradient(135deg, #212529 0%, #343a40 100%);
-            color: white;
-            border: none;
-            border-radius: 15px;
-            cursor: pointer;
-            font-weight: 800;
-            font-size: 15px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            transition: all 0.4s;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            white-space: nowrap;
-        }
-
-        .btn-search:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .btn-clear {
-            padding: 18px 40px;
-            background: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 15px;
-            cursor: pointer;
-            font-weight: 800;
-            font-size: 15px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            transition: all 0.4s;
-        }
-
-        .btn-clear:hover {
-            background: #5a6268;
-            transform: translateY(-2px);
-        }
-
-        .filter-urgency-section {
-            background: #fff3cd;
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 20px;
-            margin-bottom: 20px;
-            border: 2px solid #ffc107;
-            display: none;
-        }
-
-        .filter-urgency-section.active {
+        .date-input-group label {
             display: block;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 10px;
+            font-size: 0.9em;
         }
 
-        .filter-urgency-section h4 {
-            color: #856404;
-            font-weight: 800;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
-
-        .urgency-filter-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .urgency-btn {
-            padding: 12px 24px;
-            border: 2px solid;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 800;
-            font-size: 13px;
-            text-transform: uppercase;
+        .date-input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
             transition: all 0.3s;
             background: white;
         }
 
-        .urgency-btn.urgent {
-            border-color: #dc3545;
-            color: #dc3545;
-        }
-
-        .urgency-btn.urgent:hover,
-        .urgency-btn.urgent.active {
-            background: #dc3545;
-            color: white;
-        }
-
-        .urgency-btn.warning {
-            border-color: #ffc107;
-            color: #856404;
-        }
-
-        .urgency-btn.warning:hover,
-        .urgency-btn.warning.active {
-            background: #ffc107;
-            color: #212529;
-        }
-
-        .urgency-btn.safe {
-            border-color: #28a745;
-            color: #155724;
-        }
-
-        .urgency-btn.safe:hover,
-        .urgency-btn.safe.active {
-            background: #28a745;
-            color: white;
-        }
-
-        .urgency-btn.all {
-            border-color: #212529;
-            color: #212529;
-        }
-
-        .urgency-btn.all:hover,
-        .urgency-btn.all.active {
-            background: #212529;
-            color: white;
-        }
-
-        .export-buttons {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
-        .btn-export {
-            padding: 14px 24px;
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 800;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-export:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 123, 255, 0.3);
-        }
-
-        .btn-send-email {
-            padding: 14px 24px;
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 800;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-send-email:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.3);
-        }
-
-        .filter-section {
-            background: #fff3cd;
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 20px;
-            margin-bottom: 20px;
-            border: 2px solid #ffc107;
-            display: none;
-        }
-
-        .filter-section.active {
-            display: block;
-        }
-
-        .filter-section h4 {
-            color: #856404;
-            font-weight: 800;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
-
-        .filter-controls {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .filter-input {
-            padding: 12px 18px;
-            border: 2px solid #856404;
-            border-radius: 10px;
-            font-size: 14px;
-            font-family: 'Poppins', sans-serif;
-            font-weight: 600;
-            color: #212529;
-        }
-
-        .filter-input:focus {
+        .date-input-group input:focus {
             outline: none;
-            border-color: #212529;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
         }
 
-        .btn-filter {
-            padding: 12px 25px;
-            background: #ffc107;
-            color: #212529;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 800;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-
-        .btn-filter:hover {
-            background: #ffb300;
-            transform: translateY(-2px);
-        }
-
+        /* ===== RESULTS ===== */
         .result-card {
             background: white;
             border-radius: 20px;
-            padding: 30px;
-            border: 2px solid rgba(0, 0, 0, 0.08);
+            padding: 35px;
+            margin-top: 25px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            margin-top: 30px;
-            animation: slideIn 0.4s ease-out;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            border: 1px solid #f0f0f0;
         }
 
         .result-header {
@@ -610,229 +534,221 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f5f5f5;
             flex-wrap: wrap;
             gap: 15px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e9ecef;
         }
 
         .result-os {
-            font-size: 2em;
+            font-size: 1.9em;
             font-weight: 900;
-            color: #212529;
+            color: #1a1a1a;
         }
 
         .status-badge {
             padding: 12px 24px;
-            border-radius: 50px;
+            border-radius: 30px;
             font-size: 13px;
-            font-weight: 900;
+            font-weight: 800;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
         }
 
         .status-badge.pendentes {
-            background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
-            color: #212529;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #fff;
         }
 
-        .status-badge.todos-entregues {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        .status-badge.concluido {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
         }
 
-        .items-list {
-            margin-top: 25px;
+        /* ===== ITEMS ===== */
+        .items-count {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            padding: 14px 24px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 24px;
+            border-left: 4px solid #3b82f6;
         }
 
         .item-card {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            border-left: 4px solid #495057;
-            transition: all 0.3s;
-        }
-
-        .item-card.urgent {
-            border-left-color: #dc3545;
-            background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(232, 202, 210, 0.1) 100%);
-        }
-
-        .item-card.warning {
-            border-left-color: #ffc107;
-            background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 240, 159, 0.1) 100%);
-        }
-
-        .item-card.safe {
-            border-left-color: #28a745;
-            background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(200, 230, 201, 0.1) 100%);
+            background: #fafafa;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border-left: 4px solid #6b7280;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .item-card:hover {
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transform: translateX(8px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
         }
 
-        .item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
-            gap: 15px;
-            flex-wrap: wrap;
+        .item-card.urgent {
+            border-left-color: #ef4444;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        }
+
+        .item-card.warning {
+            border-left-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
         }
 
         .item-description {
-            flex: 1;
-            font-weight: 700;
+            font-weight: 600;
             font-size: 15px;
-            color: #212529;
-            line-height: 1.5;
+            color: #1a1a1a;
+            margin-bottom: 14px;
+            line-height: 1.6;
+        }
+
+        .item-meta {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
         .item-status {
-            padding: 6px 14px;
-            border-radius: 50px;
-            font-size: 11px;
-            font-weight: 900;
+            padding: 7px 16px;
+            border-radius: 25px;
+            font-size: 12px;
+            font-weight: 700;
             text-transform: uppercase;
-            white-space: nowrap;
+        }
+        .back-btn {
+            display: inline-block;
+            background: #000;
+            color: #fff;
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .item-status.recusada {
-            background: #dc3545;
-            color: white;
+        .back-btn:hover {
+            background: #333;
+            transform: translateY(-2px);
         }
 
         .item-status.pendente {
-            background: #ffc107;
-            color: #212529;
+            background: #fbbf24;
+            color: #78350f;
         }
 
         .item-status.emitido {
-            background: #17a2b8;
+            background: #06b6d4;
             color: white;
         }
 
-        .item-footer {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(0, 0, 0, 0.1);
-            flex-wrap: wrap;
+        .item-status.recusada {
+            background: #ef4444;
+            color: white;
         }
 
         .item-date {
             display: flex;
             align-items: center;
-            gap: 8px;
-            color: #495057;
-            font-size: 13px;
+            gap: 6px;
+            color: #4b5563;
             font-weight: 600;
-        }
-
-        .date-highlight {
-            background: #fff3cd;
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-weight: 800;
-            color: #856404;
+            font-size: 14px;
         }
 
         .urgency-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 50px;
-            font-size: 11px;
-            font-weight: 900;
+            padding: 7px 16px;
+            border-radius: 25px;
+            font-size: 12px;
+            font-weight: 800;
             text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .urgency-badge.urgent {
-            background: #dc3545;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
         }
 
         .urgency-badge.warning {
-            background: #ffc107;
-            color: #212529;
-        }
-
-        .urgency-badge.safe {
-            background: #28a745;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
         }
 
-        .empty-state {
+        /* ===== EMPTY STATES ===== */
+        .empty-state,
+        .all-delivered {
             text-align: center;
-            padding: 60px 20px;
-            color: #6c757d;
+            padding: 60px 30px;
+            border-radius: 20px;
         }
 
-        .empty-state h3 {
-            font-size: 1.8em;
-            font-weight: 800;
-            margin-bottom: 10px;
-            color: #212529;
-        }
-
-        .empty-state p {
-            font-size: 16px;
+        .empty-state {
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            border: 2px dashed #d1d5db;
         }
 
         .all-delivered {
-            text-align: center;
-            padding: 40px 20px;
-            background: #d4edda;
-            border-radius: 15px;
-            border: 2px solid #28a745;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border: 2px solid #10b981;
+        }
+
+        .empty-state h3,
+        .all-delivered h3 {
+            font-size: 1.6em;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .empty-state h3 {
+            color: #4b5563;
         }
 
         .all-delivered h3 {
-            font-size: 1.5em;
-            font-weight: 800;
-            color: #155724;
-            margin-bottom: 10px;
+            color: #065f46;
+        }
+
+        .empty-state p,
+        .all-delivered p {
+            font-size: 1em;
+            color: #6b7280;
         }
 
         .all-delivered p {
-            color: #155724;
-            font-size: 15px;
+            color: #047857;
         }
 
-        .no-items-in-range {
-            text-align: center;
-            padding: 40px 20px;
-            background: #fff3cd;
-            border-radius: 15px;
-            border: 2px solid #ffc107;
-        }
-
-        .no-items-in-range h3 {
-            font-size: 1.5em;
-            font-weight: 800;
-            color: #856404;
-            margin-bottom: 10px;
-        }
-
-        .no-items-in-range p {
-            color: #856404;
-            font-size: 15px;
-        }
-
+        /* ===== NOTIFICATIONS ===== */
         .notification {
             position: fixed;
             top: 30px;
             right: 30px;
-            padding: 20px 30px;
-            border-radius: 15px;
+            padding: 20px 28px;
+            border-radius: 16px;
             font-weight: 700;
-            max-width: 400px;
+            max-width: 420px;
             z-index: 10000;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            animation: slideInRight 0.4s ease;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+            animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         @keyframes slideInRight {
@@ -841,172 +757,284 @@
         }
 
         .notification.success {
-            background: linear-gradient(135deg, rgba(40, 167, 69, 0.95), rgba(32, 201, 151, 0.95));
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
         }
 
         .notification.error {
-            background: linear-gradient(135deg, rgba(220, 53, 69, 0.95), rgba(200, 35, 51, 0.95));
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
         }
 
         .notification.info {
-            background: linear-gradient(135deg, rgba(33, 150, 243, 0.95), rgba(21, 101, 192, 0.95));
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
         }
 
-        .items-count {
-            text-align: center;
-            padding: 15px;
-            background: #fff3cd;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-weight: 700;
-            color: #856404;
+        /* ===== EMAIL SECTION ===== */
+        .email-section {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-radius: 20px;
+            padding: 28px;
+            margin-top: 24px;
+            border: 2px solid #3b82f6;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
         }
 
-        .email-input-container {
+        .email-section h4 {
+            color: #1e40af;
+            font-weight: 800;
+            margin-bottom: 18px;
+            font-size: 1.15em;
+        }
+
+        .email-input-wrapper {
             display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            align-items: flex-end;
-            flex-wrap: wrap;
+            gap: 12px;
+            align-items: end;
         }
 
-        .email-input-group {
+        .email-input-wrapper input {
             flex: 1;
-            min-width: 250px;
-        }
-
-        .email-input-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 700;
-            color: #212529;
-            font-size: 13px;
-            text-transform: uppercase;
-        }
-
-        .email-input-group input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid rgba(0, 0, 0, 0.15);
-            border-radius: 10px;
-            font-size: 14px;
-            font-family: 'Poppins', sans-serif;
+            padding: 16px 20px;
+            border: 2px solid #93c5fd;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
             font-weight: 500;
-            transition: all 0.3s;
+            font-size: 15px;
+            background: white;
         }
 
-        .email-input-group input:focus {
+        .email-input-wrapper input:focus {
             outline: none;
-            border-color: #212529;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
         }
 
+        /* ===== EXPORT BUTTONS ===== */
+        .export-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .export-buttons .btn {
+            width: 100%;
+        }
+
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
-            .header h1 { font-size: 2.2em; }
-            .search-actions { flex-direction: column; }
-            .btn-search, .btn-clear { width: 100%; }
-            .export-buttons { flex-direction: column; }
-            .btn-export, .btn-send-email { width: 100%; justify-content: center; }
-            .item-header { flex-direction: column; }
-            .os-input-group { flex-direction: column; }
-            .filter-controls { flex-direction: column; align-items: stretch; }
-            .urgency-filter-buttons { flex-direction: column; }
-            .urgency-btn { width: 100%; }
-            .email-input-container { flex-direction: column; }
-            .email-input-group { min-width: 100%; }
+            body {
+                padding: 15px;
+            }
+
+            .main-header {
+                padding: 35px 25px;
+            }
+
+            .main-header h1 {
+                font-size: 2em;
+            }
+
+            .card {
+                padding: 28px 20px;
+            }
+
+            .os-input-group {
+                flex-direction: column;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-buttons {
+                flex-direction: column;
+            }
+
+            .filter-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .date-inputs {
+                grid-template-columns: 1fr;
+            }
+
+            .result-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .email-input-wrapper {
+                flex-direction: column;
+            }
+
+            .email-input-wrapper input,
+            .email-input-wrapper .btn {
+                width: 100%;
+            }
+
+            .item-meta {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .export-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
+    <button class="back-btn" onclick="window.location.href='index.html';">← Voltar ao Dashboard</button>
     <div class="container">
-        <div class="header-buttons">
-            <button class="btn-dashboard" onclick="window.location.href='index.html'">🏠 Dashboard</button>
-        </div>
-
-        <div class="header">
+        <!-- HEADER -->
+        <div class="main-header">
             <h1>🛒 Gerenciador de Compras</h1>
-            <p>Sistema Integrado de Controle de Entregas - O.S.</p>
+            <p>Sistema Integrado de Controle de Entregas</p>
         </div>
 
-        <div class="glass-card">
-            <div class="upload-section">
-                <h3>📂 Upload de Planilha Excel</h3>
-                <p>Faça upload do arquivo <strong>Lista de Solicitação de Materiais</strong> (.xls ou .xlsx)</p>
-                <div class="file-input-wrapper">
-                    <input type="file" id="excelFile" accept=".xlsx, .xls" onchange="processarExcel(this)">
-                    <label for="excelFile" class="file-input-label">
-                        📤 Selecionar Arquivo Excel
-                    </label>
-                </div>
-                <div id="fileName" class="file-name"></div>
-                <div id="fileInfo" class="file-info">
-                    💾 Planilha salva com sucesso!
-                    <span id="fileSourceBadge" class="file-source-badge"></span>
-                </div>
+        <!-- UPLOAD CARD -->
+        <div class="card">
+            <div class="card-header">
+                <h2>📂 Upload de Planilha</h2>
+                <p>Carregue o arquivo Excel com a lista de solicitação de materiais</p>
+            </div>
+            
+            <div class="file-input-wrapper">
+                <input type="file" id="excelFile" accept=".xlsx, .xls" onchange="processarExcel(this)">
+                <label for="excelFile">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">📤</div>
+                        <h3>Clique para selecionar o arquivo</h3>
+                        <p>Formatos suportados: .xlsx, .xls</p>
+                    </div>
+                </label>
             </div>
 
-            <div class="search-section">
-                <h3>🔍 Consultar O.S.</h3>
-                
-                <div id="osInputsContainer" class="os-inputs-container">
+            <div id="fileInfo" class="hidden">
+                <div class="file-info-badge">
+                    <span>✓</span>
+                    <span id="fileName">Arquivo carregado</span>
+                </div>
+                <div id="firebaseStatus" class="firebase-status">
+                    <span>☁️</span>
+                    <span id="firebaseStatusText">Carregado do Firebase</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEARCH CARD -->
+        <div class="card">
+            <div class="search-card-header">
+                <h2>🔍 Consultar O.S.</h2>
+                <p>Digite os números das ordens de serviço que deseja consultar</p>
+            </div>
+
+            <div class="os-input-wrapper">
+                <div id="osInputsContainer">
                     <div class="os-input-group">
-                        <input type="text" class="search-input os-input" placeholder="Digite o número da O.S. (ex: 20920)" onkeypress="if(event.key === 'Enter') buscarOS()" oninput="salvarOSAoDigitar(this)">
+                        <input 
+                            type="text" 
+                            class="search-input os-input" 
+                            placeholder="Digite o número da O.S. (ex: 20896)" 
+                            onkeypress="if(event.key === 'Enter') buscarOS()"
+                            oninput="salvarOSAoDigitar(this)"
+                        >
                     </div>
                 </div>
+            </div>
 
-                <button class="btn-add-os" onclick="adicionarCampoOS()">➕ Adicionar Outra O.S.</button>
+            <!-- BOTÕES ORGANIZADOS EM 3 COLUNAS -->
+            <div class="action-buttons">
+                <button class="btn btn-success" onclick="adicionarCampoOS()">
+                    ➕ Adicionar Outra O.S.
+                </button>
+                <button class="btn btn-primary" onclick="buscarOS()">
+                    🔎 Buscar Pedidos
+                </button>
+                <button class="btn btn-secondary" onclick="limparBusca()">
+                    🗑️ Limpar Tudo
+                </button>
+            </div>
 
-                <div class="search-actions">
-                    <button class="btn-search" onclick="buscarOS()">🔎 Buscar</button>
-                    <button class="btn-clear" onclick="limparBusca()">🗑️ Limpar</button>
+            <!-- FILTER SECTION -->
+            <div id="filterSection" class="filter-section hidden">
+                <h3>⚡ Filtrar por Urgência</h3>
+                <div class="filter-buttons">
+                    <button class="filter-btn all active" onclick="filtrarPorUrgencia('all')">
+                        📋 Todos
+                    </button>
+                    <button class="filter-btn urgent" onclick="filtrarPorUrgencia('urgent')">
+                        🔴 Atrasados
+                    </button>
+                    <button class="filter-btn warning" onclick="filtrarPorUrgencia('warning')">
+                        🟢 No Prazo
+                    </button>
                 </div>
+            </div>
 
-                <div id="exportSection" class="export-buttons" style="display: none;">
-                    <button class="btn-export" onclick="exportarExcel()">📊 Exportar para Excel</button>
-                    <button class="btn-export" onclick="exportarPDF()">📄 Exportar para PDF</button>
-                    <button class="btn-send-email" onclick="abrirEnvioEmail()">📧 Enviar por Email</button>
-                </div>
-
-                <!-- Entrada de Email -->
-                <div id="emailSection" class="email-input-container" style="display: none;">
-                    <div class="email-input-group">
-                        <label>📧 Email para Envio</label>
-                        <input type="email" id="emailDestino" placeholder="exemplo@email.com" />
+            <!-- DATE FILTER -->
+            <div id="dateFilterSection" class="date-filter hidden">
+                <h4>📅 Filtrar por Data de Entrega</h4>
+                <div class="date-inputs">
+                    <div class="date-input-group">
+                        <label>Data Inicial</label>
+                        <input type="date" id="dataInicio">
                     </div>
-                    <button class="btn-send-email" onclick="confirmarEnvioEmail()" style="padding: 12px 24px; height: fit-content;">✉️ Enviar</button>
-                    <button class="btn-clear" onclick="fecharEnvioEmail()" style="padding: 12px 24px; height: fit-content; background: #6c757d;">❌ Cancelar</button>
-                </div>
-
-                <!-- Filtro de Urgência -->
-                <div id="filterUrgencySection" class="filter-urgency-section">
-                    <h4>⚡ Filtrar por Urgência</h4>
-                    <div class="urgency-filter-buttons">
-                        <button class="urgency-btn all active" onclick="filtrarPorUrgencia('all')">📋 Todos</button>
-                        <button class="urgency-btn urgent" onclick="filtrarPorUrgencia('urgent')">🔴 Atrasadas</button>
-                        <button class="urgency-btn warning" onclick="filtrarPorUrgencia('warning')">🟡 No Prazo</button>
-                        <button class="urgency-btn safe" onclick="filtrarPorUrgencia('safe')">🟢 Tranquilas</button>
+                    <div class="date-input-group">
+                        <label>Data Final</label>
+                        <input type="date" id="dataFim">
                     </div>
+                    <button class="btn btn-primary" onclick="aplicarFiltroData()">
+                        Aplicar Filtro
+                    </button>
+                    <button class="btn btn-outline" onclick="limparFiltroData()">
+                        Limpar
+                    </button>
                 </div>
+            </div>
 
-                <!-- Filtro de Data -->
-                <div id="filterSection" class="filter-section">
-                    <h4>🗓️ Filtrar por Data de Entrega</h4>
-                    <div class="filter-controls">
-                        <label style="font-weight: 600; color: #856404;">De:</label>
-                        <input type="date" id="dataInicio" class="filter-input">
-                        <label style="font-weight: 600; color: #856404;">Até:</label>
-                        <input type="date" id="dataFim" class="filter-input">
-                        <button class="btn-filter" onclick="aplicarFiltroData()">Aplicar Filtro</button>
-                        <button class="btn-filter" onclick="limparFiltroData()">Limpar Filtro</button>
-                    </div>
+            <!-- EXPORT BUTTONS -->
+            <div id="exportSection" class="export-buttons hidden">
+                <button class="btn btn-primary" onclick="exportarExcel()">
+                    📊 Exportar Excel
+                </button>
+                <button class="btn btn-primary" onclick="exportarPDF()">
+                    📄 Exportar PDF
+                </button>
+                <button class="btn btn-primary" onclick="abrirEnvioEmail()">
+                    📧 Enviar por Email
+                </button>
+            </div>
+
+            <!-- EMAIL SECTION -->
+            <div id="emailSection" class="email-section hidden">
+                <h4>📧 Enviar Relatório por Email</h4>
+                <div class="email-input-wrapper">
+                    <input 
+                        type="email" 
+                        id="emailDestino" 
+                        placeholder="Digite o email do destinatário"
+                    >
+                    <button class="btn btn-primary" onclick="confirmarEnvioEmail()">
+                        ✉️ Enviar
+                    </button>
+                    <button class="btn btn-secondary" onclick="fecharEnvioEmail()">
+                        ❌ Cancelar
+                    </button>
                 </div>
-
-                <div id="resultadoContainer"></div>
             </div>
         </div>
+
+        <!-- RESULTS CONTAINER -->
+        <div id="resultadoContainer"></div>
     </div>
 
     <script>
@@ -1022,18 +1050,18 @@
             publicKey: 'SemwnDhUgHqJ1l0VG'
         };
 
-        // ===== FUNÇÕES DE EMAIL CORRIGIDAS =====
+        // ===== EMAIL FUNCTIONS =====
         function abrirEnvioEmail() {
             if (resultadosBusca.length === 0) {
                 mostrarNotificacao('⚠️ Realize uma busca primeiro', 'error');
                 return;
             }
-            document.getElementById('emailSection').style.display = 'flex';
+            document.getElementById('emailSection').classList.remove('hidden');
             document.getElementById('emailDestino').focus();
         }
 
         function fecharEnvioEmail() {
-            document.getElementById('emailSection').style.display = 'none';
+            document.getElementById('emailSection').classList.add('hidden');
             document.getElementById('emailDestino').value = '';
         }
 
@@ -1060,7 +1088,6 @@
         function enviarEmailComEmailJS(emailDestino) {
             mostrarNotificacao('📤 Enviando...', 'info');
 
-            // Calcular estatísticas
             let totalPendencias = 0;
             let totalAtrasadas = 0;
             let totalNoPrazo = 0;
@@ -1068,13 +1095,15 @@
             resultadosBusca.forEach(resultado => {
                 totalPendencias += resultado.itens.length;
                 resultado.itens.forEach(item => {
-                    const urgencia = calcularUrgencia(item['Dt. Previsão de Entrega']);
+                    const urgencia = calcularUrgenciaComSolicitacao(
+                        item['Data Previsão Solicitação'],
+                        item['Dt. Previsão de Entrega']
+                    );
                     if (urgencia === 'urgent') totalAtrasadas++;
                     if (urgencia === 'warning') totalNoPrazo++;
                 });
             });
 
-            // Gerar lista formatada
             let pendenciasLista = '';
             resultadosBusca.forEach(resultado => {
                 const { numeroOS, itens, totalItens } = resultado;
@@ -1089,15 +1118,16 @@
                         const descricao = item['Descrição Produto'] || 'Descrição não informada';
                         const status = item['Status Entrega'] || 'Status não informado';
                         const dataEntrega = converterDataExcel(item['Dt. Previsão de Entrega']) || 'Não informada';
-                        const urgencia = calcularUrgencia(item['Dt. Previsão de Entrega']);
+                        const urgencia = calcularUrgenciaComSolicitacao(
+                            item['Data Previsão Solicitação'],
+                            item['Dt. Previsão de Entrega']
+                        );
 
                         let urgencyLabel = '';
                         if (urgencia === 'urgent') {
                             urgencyLabel = ' 🔴 ATRASADO';
                         } else if (urgencia === 'warning') {
-                            urgencyLabel = ' 🟡 NO PRAZO';
-                        } else if (urgencia === 'safe') {
-                            urgencyLabel = ' 🟢 TRANQUILO';
+                            urgencyLabel = ' 🟢 NO PRAZO';
                         }
 
                         pendenciasLista += `📦 ${descricao}\n`;
@@ -1109,7 +1139,6 @@
                 }
             });
 
-            // Preparar parâmetros para o template
             const templateParams = {
                 to_email: emailDestino,
                 title: `Relatório O.S. ${new Date().toLocaleDateString('pt-BR')}`,
@@ -1120,29 +1149,18 @@
                 pendencias_lista: pendenciasLista
             };
 
-            console.log('Enviando com parâmetros:', templateParams);
-
             emailjs.send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, templateParams)
                 .then(response => {
-                    console.log('✅ Email enviado com sucesso:', response);
                     mostrarNotificacao('✅ Email enviado com sucesso!', 'success');
                     fecharEnvioEmail();
                 })
                 .catch(error => {
                     console.error('❌ Erro ao enviar email:', error);
-                    let mensagemErro = '❌ Erro ao enviar email';
-                    
-                    if (error.text) {
-                        mensagemErro += `: ${error.text}`;
-                    } else if (error.message) {
-                        mensagemErro += `: ${error.message}`;
-                    }
-                    
-                    mostrarNotificacao(mensagemErro, 'error');
+                    mostrarNotificacao('❌ Erro ao enviar email', 'error');
                 });
         }
 
-        // Salvar O.S. ao digitar
+        // ===== FIREBASE FUNCTIONS =====
         function salvarOSAoDigitar(input) {
             const valor = input.value.trim();
             
@@ -1154,7 +1172,6 @@
             }
         }
 
-        // Salvar O.S. no Firebase
         function salvarOSFirebase(numeroOS) {
             try {
                 const id = 'os_' + numeroOS + '_' + Date.now();
@@ -1166,21 +1183,32 @@
                 window.firebaseSet(
                     window.firebaseRef(window.firebaseDB, `gerenciador_compras/os_frequentes/${id}`),
                     novaOS
-                ).catch(error => {
-                    console.error('Erro ao salvar O.S.:', error);
-                });
+                ).catch(error => console.error('Erro ao salvar O.S.:', error));
             } catch (e) {
                 console.error('Erro ao salvar O.S.:', e);
             }
         }
 
-        // Carregar dados ao iniciar
         function carregarDadosSalvos() {
+            mostrarStatusFirebase('Carregando...', true);
             carregarExcelFirebase();
             carregarOSFrequentes();
         }
 
-        // Carregar Excel do Firebase
+        function mostrarStatusFirebase(texto, loading = false) {
+            const statusEl = document.getElementById('firebaseStatusText');
+            const containerEl = document.getElementById('firebaseStatus');
+            
+            if (statusEl && containerEl) {
+                statusEl.textContent = texto;
+                if (loading) {
+                    containerEl.classList.add('loading');
+                } else {
+                    containerEl.classList.remove('loading');
+                }
+            }
+        }
+
         function carregarExcelFirebase() {
             const excelRef = window.firebaseRef(window.firebaseDB, 'gerenciador_compras/excel_atual');
             
@@ -1190,18 +1218,23 @@
                     try {
                         dadosExcel = descomprimirDados(dados.dados);
                         arquivoSource = 'firebase';
-                        document.getElementById('fileName').textContent = `📄 ${dados.nome}`;
-                        document.getElementById('fileInfo').classList.add('active');
-                        document.getElementById('fileSourceBadge').textContent = 'FIREBASE';
-                        document.getElementById('fileSourceBadge').className = 'file-source-badge firebase';
+                        document.getElementById('fileName').textContent = dados.nome;
+                        document.getElementById('fileInfo').classList.remove('hidden');
+                        document.getElementById('uploadArea').classList.add('active');
+                        mostrarStatusFirebase(`☁️ Sincronizado - ${dados.nome}`);
+                        console.log('✅ Excel carregado do Firebase:', dados.nome);
                     } catch (e) {
                         console.error('Erro ao descomprimir dados do Firebase:', e);
+                        mostrarStatusFirebase('❌ Erro ao carregar');
                     }
+                } else {
+                    mostrarStatusFirebase('📂 Nenhum arquivo salvo');
                 }
+            }, {
+                onlyOnce: false
             });
         }
 
-        // Carregar O.S. frequentes do Firebase
         function carregarOSFrequentes() {
             const osRef = window.firebaseRef(window.firebaseDB, 'gerenciador_compras/os_frequentes');
             window.firebaseOnValue(osRef, (snapshot) => {
@@ -1217,7 +1250,6 @@
             });
         }
 
-        // Comprimir dados
         function comprimirDados(dados) {
             const jsonString = JSON.stringify(dados);
             const compressed = pako.gzip(jsonString);
@@ -1228,7 +1260,6 @@
             return btoa(binaryString);
         }
 
-        // Descomprimir dados
         function descomprimirDados(compressedBase64) {
             try {
                 const binaryString = atob(compressedBase64);
@@ -1244,9 +1275,9 @@
             }
         }
 
-        // Salvar Excel no Firebase
         function salvarExcelFirebase(jsonData, nomeArquivo) {
             try {
+                mostrarStatusFirebase('Salvando no Firebase...', true);
                 const comprimido = comprimirDados(jsonData);
                 const excelRef = window.firebaseRef(window.firebaseDB, 'gerenciador_compras/excel_atual');
                 
@@ -1254,23 +1285,29 @@
                     dados: comprimido,
                     nome: nomeArquivo,
                     dataSalva: new Date().toLocaleString('pt-BR'),
-                    tamanho: comprimido.length
+                    dataTimestamp: Date.now(),
+                    tamanho: comprimido.length,
+                    totalRegistros: jsonData.length
+                }).then(() => {
+                    mostrarNotificacao(`✅ Planilha salva no Firebase e sincronizada!`, 'success');
+                    mostrarStatusFirebase(`☁️ Sincronizado - ${nomeArquivo}`);
+                    console.log('✅ Excel salvo no Firebase:', nomeArquivo, `${jsonData.length} registros`);
+                }).catch(error => {
+                    console.error('Erro ao salvar no Firebase:', error);
+                    mostrarNotificacao('⚠️ Erro ao salvar no Firebase', 'error');
+                    mostrarStatusFirebase('❌ Erro ao salvar');
                 });
-
-                mostrarNotificacao(`✅ Planilha salva no Firebase`, 'info');
             } catch (e) {
                 console.error('Erro ao salvar no Firebase:', e);
                 mostrarNotificacao('⚠️ Erro ao salvar no Firebase', 'error');
             }
         }
 
-        // Processar arquivo Excel
+        // ===== EXCEL PROCESSING =====
         function processarExcel(input) {
             const file = input.files[0];
             if (!file) return;
 
-            document.getElementById('fileName').textContent = `📄 ${file.name}`;
-            
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
@@ -1292,17 +1329,10 @@
                     
                     salvarExcelFirebase(jsonData, file.name);
                     
-                    try {
-                        localStorage.setItem('excelDataCache', JSON.stringify(jsonData));
-                        localStorage.setItem('excelFileName', file.name);
-                    } catch (storageError) {
-                        console.warn('Não foi possível salvar no localStorage');
-                    }
-                    
-                    document.getElementById('fileInfo').classList.add('active');
-                    document.getElementById('fileSourceBadge').textContent = 'LOCAL';
-                    document.getElementById('fileSourceBadge').className = 'file-source-badge local';
-                    mostrarNotificacao(`✅ Planilha carregada! ${dadosExcel.length} registros.`, 'success');
+                    document.getElementById('fileName').textContent = file.name;
+                    document.getElementById('fileInfo').classList.remove('hidden');
+                    document.getElementById('uploadArea').classList.add('active');
+                    mostrarNotificacao(`✅ Planilha carregada! ${dadosExcel.length} registros`, 'success');
                     
                 } catch (error) {
                     console.error('Erro ao processar Excel:', error);
@@ -1313,24 +1343,29 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // Adicionar campo de O.S.
+        // ===== UI FUNCTIONS =====
         function adicionarCampoOS() {
             const container = document.getElementById('osInputsContainer');
             const div = document.createElement('div');
             div.className = 'os-input-group';
             div.innerHTML = `
-                <input type="text" class="search-input os-input" placeholder="Digite o número da O.S." onkeypress="if(event.key === 'Enter') buscarOS()" oninput="salvarOSAoDigitar(this)">
-                <button class="btn-remove-os" onclick="removerCampoOS(this)">✖</button>
+                <input 
+                    type="text" 
+                    class="search-input os-input" 
+                    placeholder="Digite o número da O.S." 
+                    onkeypress="if(event.key === 'Enter') buscarOS()"
+                    oninput="salvarOSAoDigitar(this)"
+                >
+                <button class="btn btn-danger" onclick="removerCampoOS(this)">✖</button>
             `;
             container.appendChild(div);
         }
 
-        // Remover campo de O.S.
         function removerCampoOS(btn) {
             btn.parentElement.remove();
         }
 
-        // Converter data do Excel
+        // ===== DATE FUNCTIONS =====
         function converterDataExcel(numeroExcel) {
             if (!numeroExcel || numeroExcel === '' || isNaN(numeroExcel)) {
                 return null;
@@ -1347,7 +1382,6 @@
             return `${dia}/${mes}/${ano}`;
         }
 
-        // Converter data do Excel para Date
         function converterDataExcelParaDate(numeroExcel) {
             if (!numeroExcel || numeroExcel === '' || isNaN(numeroExcel)) {
                 return null;
@@ -1360,26 +1394,23 @@
             return dataResultado;
         }
 
-        // Calcular urgência
-        function calcularUrgencia(dataExcel) {
-            const dataItem = converterDataExcelParaDate(dataExcel);
-            if (!dataItem) return 'sem-data';
+        // ===== URGENCY CALCULATION =====
+        function calcularUrgenciaComSolicitacao(dataPrevisaoSolicitacao, dataPrevisaoEntrega) {
+            const dataSolicitacao = converterDataExcelParaDate(dataPrevisaoSolicitacao);
+            const dataEntrega = converterDataExcelParaDate(dataPrevisaoEntrega);
+            
+            if (!dataSolicitacao || !dataEntrega) {
+                return 'sem-data';
+            }
 
-            const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
-            
-            const diasDiferenca = Math.floor((dataItem - hoje) / (1000 * 60 * 60 * 24));
-            
-            if (diasDiferenca < 0) {
+            if (dataEntrega > dataSolicitacao) {
                 return 'urgent';
-            } else if (diasDiferenca <= 7) {
-                return 'warning';
             } else {
-                return 'safe';
+                return 'warning';
             }
         }
 
-        // Buscar O.S.
+        // ===== SEARCH =====
         function buscarOS() {
             const inputs = document.querySelectorAll('.os-input');
             const numerosOS = [];
@@ -1432,24 +1463,24 @@
                         </div>
                     </div>
                 `;
-                document.getElementById('filterUrgencySection').classList.remove('active');
-                document.getElementById('filterSection').classList.remove('active');
-                document.getElementById('exportSection').style.display = 'none';
+                document.getElementById('filterSection').classList.add('hidden');
+                document.getElementById('dateFilterSection').classList.add('hidden');
+                document.getElementById('exportSection').classList.add('hidden');
                 return;
             }
 
             exibirResultados();
-            document.getElementById('filterUrgencySection').classList.add('active');
-            document.getElementById('filterSection').classList.add('active');
-            document.getElementById('exportSection').style.display = 'flex';
-            document.getElementById('emailSection').style.display = 'none';
+            document.getElementById('filterSection').classList.remove('hidden');
+            document.getElementById('dateFilterSection').classList.remove('hidden');
+            document.getElementById('exportSection').classList.remove('hidden');
+            document.getElementById('emailSection').classList.add('hidden');
         }
 
-        // Filtrar por urgência
+        // ===== FILTERS =====
         function filtrarPorUrgencia(tipo) {
             filtroUrgenciaAtivo = tipo;
 
-            document.querySelectorAll('.urgency-btn').forEach(btn => {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             event.target.classList.add('active');
@@ -1459,7 +1490,10 @@
             } else {
                 const resultadosFiltrados = resultadosBusca.map(resultado => {
                     const itensFiltrados = resultado.itens.filter(item => {
-                        const urgencia = calcularUrgencia(item['Dt. Previsão de Entrega']);
+                        const urgencia = calcularUrgenciaComSolicitacao(
+                            item['Data Previsão Solicitação'],
+                            item['Dt. Previsão de Entrega']
+                        );
                         return urgencia === tipo;
                     });
 
@@ -1474,107 +1508,6 @@
             }
         }
 
-        // Exibir resultados
-        function exibirResultados(dadosFiltrados = null) {
-            const dados = dadosFiltrados || resultadosBusca;
-            let html = '';
-
-            dados.forEach(resultado => {
-                const { numeroOS, itens, totalItens, filtroAplicado } = resultado;
-
-                if (itens.length === 0) {
-                    if (filtroAplicado) {
-                        html += `
-                            <div class="result-card">
-                                <div class="result-header">
-                                    <div class="result-os">O.S. ${numeroOS}</div>
-                                    <span class="status-badge pendentes">⚠️ SEM ITENS NO FILTRO</span>
-                                </div>
-                                <div class="no-items-in-range">
-                                    <h3>📅 Nenhum item neste filtro</h3>
-                                    <p>Não há itens com essa urgência para esta O.S.</p>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        html += `
-                            <div class="result-card">
-                                <div class="result-header">
-                                    <div class="result-os">O.S. ${numeroOS}</div>
-                                    <span class="status-badge todos-entregues">✅ TODOS ENTREGUES</span>
-                                </div>
-                                <div class="all-delivered">
-                                    <h3>🎉 Todos os ${totalItens} itens foram entregues!</h3>
-                                    <p>Esta O.S. não possui pendências de entrega.</p>
-                                </div>
-                            </div>
-                        `;
-                    }
-                } else {
-                    let itensHTML = '';
-                    itens.forEach(item => {
-                        const descricao = item['Descrição Produto'] || 'Descrição não informada';
-                        const statusEntrega = item['Status Entrega'] || 'Status não informado';
-                        const dataEntrega = item['Dt. Previsão de Entrega'];
-                        const dataFormatada = converterDataExcel(dataEntrega) || 'Não informada';
-                        const urgencia = calcularUrgencia(dataEntrega);
-                        
-                        let statusClasse = 'pendente';
-                        const statusLower = String(statusEntrega).toLowerCase();
-                        
-                        if (statusLower.includes('recusada') || statusLower.includes('recusado')) {
-                            statusClasse = 'recusada';
-                        } else if (statusLower.includes('emitido')) {
-                            statusClasse = 'emitido';
-                        }
-
-                        let urgencyText = '';
-                        if (urgencia === 'urgent') {
-                            urgencyText = '<span class="urgency-badge urgent">🔴 ATRASADO</span>';
-                        } else if (urgencia === 'warning') {
-                            urgencyText = '<span class="urgency-badge warning">🟡 NO PRAZO</span>';
-                        } else if (urgencia === 'safe') {
-                            urgencyText = '<span class="urgency-badge safe">🟢 TRANQUILO</span>';
-                        }
-
-                        itensHTML += `
-                            <div class="item-card ${urgencia}">
-                                <div class="item-header">
-                                    <div class="item-description">📦 ${descricao}</div>
-                                    <span class="item-status ${statusClasse}">${statusEntrega}</span>
-                                </div>
-                                <div class="item-footer">
-                                    <span class="item-date-icon">📅</span>
-                                    <div class="item-date">
-                                        Previsão: <span class="date-highlight">${dataFormatada}</span>
-                                        ${urgencyText}
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    html += `
-                        <div class="result-card">
-                            <div class="result-header">
-                                <div class="result-os">O.S. ${numeroOS}</div>
-                                <span class="status-badge pendentes">⏳ ${itens.length} PENDENTE${itens.length > 1 ? 'S' : ''}</span>
-                            </div>
-                            <div class="items-count">
-                                📋 Mostrando ${itens.length} de ${totalItens} itens${filtroAplicado ? ' (filtrados)' : ` (${totalItens - itens.length} entregues)`}
-                            </div>
-                            <div class="items-list">
-                                ${itensHTML}
-                            </div>
-                        </div>
-                    `;
-                }
-            });
-
-            document.getElementById('resultadoContainer').innerHTML = html;
-        }
-
-        // Aplicar filtro de data
         function aplicarFiltroData() {
             const dataInicio = document.getElementById('dataInicio').value;
             const dataFim = document.getElementById('dataFim').value;
@@ -1588,9 +1521,7 @@
                 const itensFiltrados = resultado.itens.filter(item => {
                     const dataItem = converterDataExcelParaDate(item['Dt. Previsão de Entrega']);
                     
-                    if (!dataItem) {
-                        return false;
-                    }
+                    if (!dataItem) return false;
 
                     const inicio = dataInicio ? new Date(dataInicio + 'T00:00:00') : null;
                     const fim = dataFim ? new Date(dataFim + 'T00:00:00') : null;
@@ -1619,7 +1550,6 @@
             mostrarNotificacao(`✅ Filtro aplicado: ${totalFiltrados} item(ns)`, 'success');
         }
 
-        // Limpar filtro de data
         function limparFiltroData() {
             document.getElementById('dataInicio').value = '';
             document.getElementById('dataFim').value = '';
@@ -1627,7 +1557,104 @@
             mostrarNotificacao('🗑️ Filtro removido', 'success');
         }
 
-        // Exportar para Excel
+        // ===== DISPLAY RESULTS =====
+        function exibirResultados(dadosFiltrados = null) {
+            const dados = dadosFiltrados || resultadosBusca;
+            let html = '';
+
+            dados.forEach(resultado => {
+                const { numeroOS, itens, totalItens, filtroAplicado } = resultado;
+
+                if (itens.length === 0) {
+                    if (filtroAplicado) {
+                        html += `
+                            <div class="result-card">
+                                <div class="result-header">
+                                    <div class="result-os">O.S. ${numeroOS}</div>
+                                    <span class="status-badge pendentes">⚠️ SEM ITENS NO FILTRO</span>
+                                </div>
+                                <div class="empty-state">
+                                    <h3>📅 Nenhum item neste filtro</h3>
+                                    <p>Não há itens com essa urgência para esta O.S.</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="result-card">
+                                <div class="result-header">
+                                    <div class="result-os">O.S. ${numeroOS}</div>
+                                    <span class="status-badge concluido">✅ TODOS ENTREGUES</span>
+                                </div>
+                                <div class="all-delivered">
+                                    <h3>🎉 Todos os ${totalItens} itens foram entregues!</h3>
+                                    <p>Esta O.S. não possui pendências de entrega.</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    let itensHTML = '';
+                    itens.forEach(item => {
+                        const descricao = item['Descrição Produto'] || 'Descrição não informada';
+                        const statusEntrega = item['Status Entrega'] || 'Status não informado';
+                        const dataEntrega = item['Dt. Previsão de Entrega'];
+                        const dataFormatada = converterDataExcel(dataEntrega) || 'Não informada';
+                        
+                        const urgencia = calcularUrgenciaComSolicitacao(
+                            item['Data Previsão Solicitação'],
+                            item['Dt. Previsão de Entrega']
+                        );
+                        
+                        let statusClasse = 'pendente';
+                        const statusLower = String(statusEntrega).toLowerCase();
+                        
+                        if (statusLower.includes('recusada') || statusLower.includes('recusado')) {
+                            statusClasse = 'recusada';
+                        } else if (statusLower.includes('emitido')) {
+                            statusClasse = 'emitido';
+                        }
+
+                        let urgencyText = '';
+                        if (urgencia === 'urgent') {
+                            urgencyText = '<span class="urgency-badge urgent">🔴 ATRASADO</span>';
+                        } else if (urgencia === 'warning') {
+                            urgencyText = '<span class="urgency-badge warning">🟢 NO PRAZO</span>';
+                        }
+
+                        itensHTML += `
+                            <div class="item-card ${urgencia}">
+                                <div class="item-description">📦 ${descricao}</div>
+                                <div class="item-meta">
+                                    <span class="item-status ${statusClasse}">${statusEntrega}</span>
+                                    <span class="item-date">📅 ${dataFormatada}</span>
+                                    ${urgencyText}
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                        <div class="result-card">
+                            <div class="result-header">
+                                <div class="result-os">O.S. ${numeroOS}</div>
+                                <span class="status-badge pendentes">⏳ ${itens.length} PENDENTE${itens.length > 1 ? 'S' : ''}</span>
+                            </div>
+                            <div class="items-count">
+                                📋 Mostrando ${itens.length} de ${totalItens} itens${filtroAplicado ? ' (filtrados)' : ` (${totalItens - itens.length} entregues)`}
+                            </div>
+                            <div class="items-list">
+                                ${itensHTML}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            document.getElementById('resultadoContainer').innerHTML = html;
+        }
+
+        // ===== EXPORT =====
         function exportarExcel() {
             if (resultadosBusca.length === 0) {
                 mostrarNotificacao('⚠️ Realize uma busca primeiro', 'error');
@@ -1640,15 +1667,16 @@
             resultadosBusca.forEach(resultado => {
                 resultado.itens.forEach(item => {
                     const dataFormatada = converterDataExcel(item['Dt. Previsão de Entrega']) || 'Não informada';
-                    const urgencia = calcularUrgencia(item['Dt. Previsão de Entrega']);
+                    const urgencia = calcularUrgenciaComSolicitacao(
+                        item['Data Previsão Solicitação'],
+                        item['Dt. Previsão de Entrega']
+                    );
                     
                     let urgencyLabel = '';
                     if (urgencia === 'urgent') {
                         urgencyLabel = 'ATRASADO';
                     } else if (urgencia === 'warning') {
                         urgencyLabel = 'NO PRAZO';
-                    } else if (urgencia === 'safe') {
-                        urgencyLabel = 'TRANQUILO';
                     } else {
                         urgencyLabel = 'SEM DATA';
                     }
@@ -1679,7 +1707,6 @@
             mostrarNotificacao('✅ Excel exportado!', 'success');
         }
 
-        // Exportar para PDF
         function exportarPDF() {
             if (resultadosBusca.length === 0) {
                 mostrarNotificacao('⚠️ Realize uma busca primeiro', 'error');
@@ -1714,15 +1741,16 @@
 
                 const tableData = itens.map(item => {
                     const dataFormatada = converterDataExcel(item['Dt. Previsão de Entrega']) || 'N/I';
-                    const urgencia = calcularUrgencia(item['Dt. Previsão de Entrega']);
+                    const urgencia = calcularUrgenciaComSolicitacao(
+                        item['Data Previsão Solicitação'],
+                        item['Dt. Previsão de Entrega']
+                    );
                     
                     let urgencyLabel = '';
                     if (urgencia === 'urgent') {
                         urgencyLabel = 'ATRASADO';
                     } else if (urgencia === 'warning') {
                         urgencyLabel = 'NO PRAZO';
-                    } else if (urgencia === 'safe') {
-                        urgencyLabel = 'TRANQUILO';
                     } else {
                         urgencyLabel = 'SEM DATA';
                     }
@@ -1747,7 +1775,7 @@
                         3: { cellWidth: 25 }
                     },
                     headStyles: {
-                        fillColor: [33, 37, 41],
+                        fillColor: [102, 126, 234],
                         textColor: 255,
                         fontSize: 10,
                         fontStyle: 'bold'
@@ -1764,14 +1792,14 @@
             mostrarNotificacao('✅ PDF exportado!', 'success');
         }
 
-        // Limpar busca
+        // ===== CLEAR =====
         function limparBusca() {
             document.querySelectorAll('.os-input').forEach(input => input.value = '');
             document.getElementById('resultadoContainer').innerHTML = '';
-            document.getElementById('filterUrgencySection').classList.remove('active');
-            document.getElementById('filterSection').classList.remove('active');
-            document.getElementById('exportSection').style.display = 'none';
-            document.getElementById('emailSection').style.display = 'none';
+            document.getElementById('filterSection').classList.add('hidden');
+            document.getElementById('dateFilterSection').classList.add('hidden');
+            document.getElementById('exportSection').classList.add('hidden');
+            document.getElementById('emailSection').classList.add('hidden');
             document.getElementById('dataInicio').value = '';
             document.getElementById('dataFim').value = '';
             resultadosBusca = [];
@@ -1782,7 +1810,7 @@
             }
         }
 
-        // Mostrar notificação
+        // ===== NOTIFICATIONS =====
         function mostrarNotificacao(mensagem, tipo = 'success') {
             const notificacao = document.createElement('div');
             notificacao.className = `notification ${tipo}`;
@@ -1794,7 +1822,7 @@
             }, 3500);
         }
 
-        // Carregar dados ao iniciar
+        // ===== INIT =====
         window.addEventListener('load', carregarDadosSalvos);
     </script>
 </body>
