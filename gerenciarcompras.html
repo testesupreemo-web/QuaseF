@@ -17,7 +17,6 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getDatabase, ref, set, onValue, update, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyAz0AnZ_-IImzWZioHy940uukfpFlZVR2o",
@@ -30,16 +29,22 @@
             measurementId: "G-VKDWWGSHGT"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-        const analytics = getAnalytics(app);
-        
-        window.firebaseDB = database;
-        window.firebaseRef = ref;
-        window.firebaseSet = set;
-        window.firebaseOnValue = onValue;
-        window.firebaseUpdate = update;
-        window.firebaseRemove = remove;
+        try {
+            const app = initializeApp(firebaseConfig);
+            const database = getDatabase(app);
+            
+            window.firebaseDB = database;
+            window.firebaseRef = ref;
+            window.firebaseSet = set;
+            window.firebaseOnValue = onValue;
+            window.firebaseUpdate = update;
+            window.firebaseRemove = remove;
+            
+            console.log('✅ Firebase inicializado com sucesso!');
+        } catch (error) {
+            console.error('❌ Erro ao inicializar Firebase:', error);
+            alert('Erro ao conectar com Firebase. Verifique o console.');
+        }
     </script>
 
     <!-- SheetJS para processar Excel -->
@@ -234,7 +239,13 @@
             color: #78350f;
         }
 
-        /* ===== SEARCH SECTION - MODERNIZADO ===== */
+        .firebase-status.error {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-left-color: #dc2626;
+            color: #991b1b;
+        }
+
+        /* ===== SEARCH SECTION ===== */
         .search-card-header {
             margin-bottom: 30px;
         }
@@ -297,7 +308,7 @@
             color: #9ca3af;
         }
 
-        /* ===== BUTTONS - MODERNIZADO E ORGANIZADOS ===== */
+        /* ===== BUTTONS ===== */
         .btn {
             padding: 16px 32px;
             border: none;
@@ -374,7 +385,6 @@
             background: #f8f9fe;
         }
 
-        /* BOTÕES ORGANIZADOS EM GRID */
         .action-buttons {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -386,7 +396,7 @@
             width: 100%;
         }
 
-        /* ===== FILTER SECTION - MODERNIZADO ===== */
+        /* ===== FILTER SECTION ===== */
         .filter-section {
             background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
             border-radius: 20px;
@@ -468,7 +478,7 @@
             border-color: #10b981;
         }
 
-        /* ===== DATE FILTER - MODERNIZADO ===== */
+        /* ===== DATE FILTER ===== */
         .date-filter {
             background: #f8f9fa;
             border-radius: 20px;
@@ -623,27 +633,6 @@
             font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
-        }
-        .back-btn {
-            display: inline-block;
-            background: #000;
-            color: #fff;
-            padding: 12px 30px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 700;
-            margin-bottom: 30px;
-            transition: all 0.3s;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .back-btn:hover {
-            background: #333;
-            transform: translateY(-2px);
         }
 
         .item-status.pendente {
@@ -892,7 +881,6 @@
     </style>
 </head>
 <body>
-    <button class="back-btn" onclick="window.location.href='index.html';">← Voltar ao Dashboard</button>
     <div class="container">
         <!-- HEADER -->
         <div class="main-header">
@@ -951,7 +939,6 @@
                 </div>
             </div>
 
-            <!-- BOTÕES ORGANIZADOS EM 3 COLUNAS -->
             <div class="action-buttons">
                 <button class="btn btn-success" onclick="adicionarCampoOS()">
                     ➕ Adicionar Outra O.S.
@@ -1173,6 +1160,11 @@
         }
 
         function salvarOSFirebase(numeroOS) {
+            if (!window.firebaseDB) {
+                console.error('Firebase não inicializado');
+                return;
+            }
+            
             try {
                 const id = 'os_' + numeroOS + '_' + Date.now();
                 const novaOS = {
@@ -1183,33 +1175,48 @@
                 window.firebaseSet(
                     window.firebaseRef(window.firebaseDB, `gerenciador_compras/os_frequentes/${id}`),
                     novaOS
-                ).catch(error => console.error('Erro ao salvar O.S.:', error));
+                ).then(() => {
+                    console.log('✅ O.S. salva:', numeroOS);
+                }).catch(error => {
+                    console.error('❌ Erro ao salvar O.S.:', error);
+                    mostrarStatusFirebase('❌ Erro: ' + error.message, false, true);
+                });
             } catch (e) {
-                console.error('Erro ao salvar O.S.:', e);
+                console.error('❌ Erro ao salvar O.S.:', e);
             }
         }
 
         function carregarDadosSalvos() {
+            if (!window.firebaseDB) {
+                console.error('Firebase não está disponível');
+                mostrarStatusFirebase('❌ Firebase não conectado', false, true);
+                return;
+            }
+            
             mostrarStatusFirebase('Carregando...', true);
             carregarExcelFirebase();
             carregarOSFrequentes();
         }
 
-        function mostrarStatusFirebase(texto, loading = false) {
+        function mostrarStatusFirebase(texto, loading = false, isError = false) {
             const statusEl = document.getElementById('firebaseStatusText');
             const containerEl = document.getElementById('firebaseStatus');
             
             if (statusEl && containerEl) {
                 statusEl.textContent = texto;
+                containerEl.classList.remove('loading', 'error');
+                
                 if (loading) {
                     containerEl.classList.add('loading');
-                } else {
-                    containerEl.classList.remove('loading');
+                } else if (isError) {
+                    containerEl.classList.add('error');
                 }
             }
         }
 
         function carregarExcelFirebase() {
+            if (!window.firebaseDB) return;
+            
             const excelRef = window.firebaseRef(window.firebaseDB, 'gerenciador_compras/excel_atual');
             
             window.firebaseOnValue(excelRef, (snapshot) => {
@@ -1222,20 +1229,24 @@
                         document.getElementById('fileInfo').classList.remove('hidden');
                         document.getElementById('uploadArea').classList.add('active');
                         mostrarStatusFirebase(`☁️ Sincronizado - ${dados.nome}`);
-                        console.log('✅ Excel carregado do Firebase:', dados.nome);
+                        console.log('✅ Excel carregado do Firebase:', dados.nome, `(${dados.totalRegistros} registros)`);
                     } catch (e) {
-                        console.error('Erro ao descomprimir dados do Firebase:', e);
-                        mostrarStatusFirebase('❌ Erro ao carregar');
+                        console.error('❌ Erro ao descomprimir dados do Firebase:', e);
+                        mostrarStatusFirebase('❌ Erro ao carregar dados', false, true);
                     }
                 } else {
-                    mostrarStatusFirebase('📂 Nenhum arquivo salvo');
+                    mostrarStatusFirebase('📂 Nenhum arquivo salvo no Firebase');
+                    console.log('ℹ️ Nenhum arquivo no Firebase ainda');
                 }
-            }, {
-                onlyOnce: false
+            }, (error) => {
+                console.error('❌ Erro ao carregar do Firebase:', error);
+                mostrarStatusFirebase('❌ Erro: ' + error.message, false, true);
             });
         }
 
         function carregarOSFrequentes() {
+            if (!window.firebaseDB) return;
+            
             const osRef = window.firebaseRef(window.firebaseDB, 'gerenciador_compras/os_frequentes');
             window.firebaseOnValue(osRef, (snapshot) => {
                 osFrequentes = [];
@@ -1246,7 +1257,10 @@
                         numero: dados[key].numero,
                         dataSalva: dados[key].dataSalva
                     })).sort((a, b) => new Date(b.dataSalva) - new Date(a.dataSalva));
+                    console.log(`✅ ${osFrequentes.length} O.S. frequentes carregadas`);
                 }
+            }, (error) => {
+                console.error('❌ Erro ao carregar O.S. frequentes:', error);
             });
         }
 
@@ -1270,36 +1284,65 @@
                 const decompressed = pako.ungzip(bytes, { to: 'string' });
                 return JSON.parse(decompressed);
             } catch (e) {
-                console.error('Erro ao descomprimir:', e);
+                console.error('❌ Erro ao descomprimir:', e);
                 return null;
             }
         }
 
         function salvarExcelFirebase(jsonData, nomeArquivo) {
+            if (!window.firebaseDB) {
+                console.error('Firebase não está disponível');
+                mostrarNotificacao('⚠️ Firebase não conectado. Verifique as configurações.', 'error');
+                mostrarStatusFirebase('❌ Firebase não conectado', false, true);
+                return;
+            }
+            
             try {
                 mostrarStatusFirebase('Salvando no Firebase...', true);
+                console.log('📤 Iniciando salvamento no Firebase...');
+                
                 const comprimido = comprimirDados(jsonData);
                 const excelRef = window.firebaseRef(window.firebaseDB, 'gerenciador_compras/excel_atual');
                 
-                window.firebaseSet(excelRef, {
+                const dadosParaSalvar = {
                     dados: comprimido,
                     nome: nomeArquivo,
                     dataSalva: new Date().toLocaleString('pt-BR'),
                     dataTimestamp: Date.now(),
                     tamanho: comprimido.length,
                     totalRegistros: jsonData.length
-                }).then(() => {
-                    mostrarNotificacao(`✅ Planilha salva no Firebase e sincronizada!`, 'success');
-                    mostrarStatusFirebase(`☁️ Sincronizado - ${nomeArquivo}`);
-                    console.log('✅ Excel salvo no Firebase:', nomeArquivo, `${jsonData.length} registros`);
-                }).catch(error => {
-                    console.error('Erro ao salvar no Firebase:', error);
-                    mostrarNotificacao('⚠️ Erro ao salvar no Firebase', 'error');
-                    mostrarStatusFirebase('❌ Erro ao salvar');
-                });
+                };
+                
+                window.firebaseSet(excelRef, dadosParaSalvar)
+                    .then(() => {
+                        mostrarNotificacao(`✅ Planilha salva no Firebase!`, 'success');
+                        mostrarStatusFirebase(`☁️ Sincronizado - ${nomeArquivo}`);
+                        console.log('✅ Excel salvo com sucesso no Firebase!', {
+                            arquivo: nomeArquivo,
+                            registros: jsonData.length,
+                            tamanho: `${(comprimido.length / 1024).toFixed(2)} KB`
+                        });
+                    })
+                    .catch(error => {
+                        console.error('❌ Erro ao salvar no Firebase:', error);
+                        console.error('Detalhes do erro:', {
+                            code: error.code,
+                            message: error.message,
+                            details: error
+                        });
+                        
+                        let mensagemErro = 'Erro ao salvar no Firebase';
+                        if (error.code === 'PERMISSION_DENIED') {
+                            mensagemErro = 'Permissão negada. Configure as regras do Firebase!';
+                        }
+                        
+                        mostrarNotificacao(`⚠️ ${mensagemErro}`, 'error');
+                        mostrarStatusFirebase('❌ ' + mensagemErro, false, true);
+                    });
             } catch (e) {
-                console.error('Erro ao salvar no Firebase:', e);
-                mostrarNotificacao('⚠️ Erro ao salvar no Firebase', 'error');
+                console.error('❌ Erro ao processar salvamento:', e);
+                mostrarNotificacao('⚠️ Erro ao processar dados', 'error');
+                mostrarStatusFirebase('❌ Erro ao processar', false, true);
             }
         }
 
@@ -1307,6 +1350,8 @@
         function processarExcel(input) {
             const file = input.files[0];
             if (!file) return;
+
+            console.log('📂 Processando arquivo:', file.name);
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -1324,6 +1369,7 @@
                         return;
                     }
 
+                    console.log(`✅ Planilha processada: ${jsonData.length} registros`);
                     dadosExcel = jsonData;
                     arquivoSource = 'local';
                     
@@ -1335,7 +1381,7 @@
                     mostrarNotificacao(`✅ Planilha carregada! ${dadosExcel.length} registros`, 'success');
                     
                 } catch (error) {
-                    console.error('Erro ao processar Excel:', error);
+                    console.error('❌ Erro ao processar Excel:', error);
                     mostrarNotificacao('❌ Erro ao processar arquivo Excel', 'error');
                 }
             };
@@ -1394,20 +1440,27 @@
             return dataResultado;
         }
 
-        // ===== URGENCY CALCULATION =====
+        // ===== NOVA LÓGICA DE URGÊNCIA =====
         function calcularUrgenciaComSolicitacao(dataPrevisaoSolicitacao, dataPrevisaoEntrega) {
             const dataSolicitacao = converterDataExcelParaDate(dataPrevisaoSolicitacao);
             const dataEntrega = converterDataExcelParaDate(dataPrevisaoEntrega);
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
             
             if (!dataSolicitacao || !dataEntrega) {
                 return 'sem-data';
             }
 
-            if (dataEntrega > dataSolicitacao) {
+            // 🔴 ATRASADO se:
+            // 1. Data Entrega > Data Solicitação (prazo estimado já está ruim)
+            // 2. OU Hoje > Data Solicitação (prazo venceu e não foi entregue)
+            if (dataEntrega > dataSolicitacao || hoje > dataSolicitacao) {
                 return 'urgent';
-            } else {
-                return 'warning';
             }
+            
+            // 🟢 NO PRAZO
+            // Data Entrega <= Data Solicitação E ainda não venceu
+            return 'warning';
         }
 
         // ===== SEARCH =====
@@ -1823,7 +1876,10 @@
         }
 
         // ===== INIT =====
-        window.addEventListener('load', carregarDadosSalvos);
+        window.addEventListener('load', () => {
+            console.log('🚀 Sistema inicializado');
+            setTimeout(carregarDadosSalvos, 1000);
+        });
     </script>
 </body>
 </html>
