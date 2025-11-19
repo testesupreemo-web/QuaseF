@@ -1231,18 +1231,14 @@ function enviarEmailComEmailJS(emailDestino) {
             urgencyLabel = '🟢 NO PRAZO';
         }
 
-        console.log(`Item ${index + 1}:`, { descricao, status, urgencyLabel });
+        console.log(`Item ${index + 1}:`, { descricao, status});
 
         pendenciasLista += `─────────────────────────────────────────────────\n`;
         pendenciasLista += `ITEM ${index + 1}\n\n`;
         pendenciasLista += `📦 Produto: ${descricao}\n\n`;
         pendenciasLista += `   ⚙️  Status: ${status}\n`;
-        pendenciasLista += `   📅 Previsão Solicitação: ${dataSolicitacao}\n`;
+        pendenciasLista += `   📅 Data Solicitação PCP: ${dataSolicitacao}\n`;
         pendenciasLista += `   📅 Previsão Entrega: ${dataEntrega}\n`;
-        
-        if (urgencyLabel) {
-            pendenciasLista += `   ${urgencyLabel}\n`;
-        }
         
         if (diasAtraso > 0) {
             pendenciasLista += `   ⏰ Dias de Atraso: ${diasAtraso}\n`;
