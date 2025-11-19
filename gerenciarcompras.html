@@ -81,7 +81,7 @@
 
         /* ===== HEADER ===== */
         .main-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #8966ea 0%, #1d2bf0 100%);
             border-radius: 24px;
             padding: 50px 40px;
             margin-bottom: 30px;
@@ -336,7 +336,7 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #8966ea 0%, #1d2bf0 100%);
             color: white;
         }
 
@@ -702,6 +702,19 @@
             color: white;
         }
 
+        /* NOVO: Badge de dias de atraso */
+        .delay-badge {
+            padding: 7px 16px;
+            border-radius: 25px;
+            font-size: 12px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         /* ===== EMPTY STATES ===== */
         .empty-state,
         .all-delivered {
@@ -963,11 +976,11 @@
             </div>
 
             <div class="action-buttons">
-                <button class="btn btn-success" onclick="adicionarCampoOS()">
-                    ➕ Adicionar Outra O.S.
-                </button>
                 <button class="btn btn-primary" onclick="buscarOS()">
                     🔎 Buscar Pedidos
+                </button>
+                <button class="btn btn-success" onclick="adicionarCampoOS()">
+                    ➕ Adicionar Outra O.S.
                 </button>
                 <button class="btn btn-secondary" onclick="limparBusca()">
                     🗑️ Limpar Tudo
@@ -1060,6 +1073,31 @@
             publicKey: 'SemwnDhUgHqJ1l0VG'
         };
 
+        // ===== NOVA FUNÇÃO: Calcular dias de atraso =====
+        function calcularDiasAtraso(dataPrevisaoSolicitacao, dataPrevisaoEntrega) {
+            const dataSolicitacao = converterDataExcelParaDate(dataPrevisaoSolicitacao);
+            const dataEntrega = converterDataExcelParaDate(dataPrevisaoEntrega);
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            
+            if (!dataSolicitacao || !dataEntrega) {
+                return null;
+            }
+
+            let diasAtraso = 0;
+            
+            // Se hoje passou da data de solicitação
+            if (hoje > dataSolicitacao) {
+                diasAtraso = Math.floor((hoje - dataSolicitacao) / (1000 * 60 * 60 * 24));
+            }
+            // Se a data de entrega é maior que a solicitação
+            else if (dataEntrega > dataSolicitacao) {
+                diasAtraso = Math.floor((dataEntrega - dataSolicitacao) / (1000 * 60 * 60 * 24));
+            }
+            
+            return diasAtraso > 0 ? diasAtraso : 0;
+        }
+
         // ===== EMAIL FUNCTIONS =====
         function abrirEnvioEmail() {
             if (resultadosBusca.length === 0) {
@@ -1128,6 +1166,11 @@
                         const descricao = item['Descrição Produto'] || 'Descrição não informada';
                         const status = item['Status Entrega'] || 'Status não informado';
                         const dataEntrega = converterDataExcel(item['Dt. Previsão de Entrega']) || 'Não informada';
+                        const dataSolicitacao = converterDataExcel(item['Data Previsão Solicitação']) || 'Não informada';
+                        const diasAtraso = calcularDiasAtraso(
+                            item['Data Previsão Solicitação'],
+                            item['Dt. Previsão de Entrega']
+                        );
                         const urgencia = calcularUrgenciaComSolicitacao(
                             item['Data Previsão Solicitação'],
                             item['Dt. Previsão de Entrega']
@@ -1135,14 +1178,15 @@
 
                         let urgencyLabel = '';
                         if (urgencia === 'urgent') {
-                            urgencyLabel = ' 🔴 ATRASADO';
+                            urgencyLabel = ` 🔴 ATRASADO${diasAtraso > 0 ? ` (${diasAtraso} dias)` : ''}`;
                         } else if (urgencia === 'warning') {
                             urgencyLabel = ' 🟢 NO PRAZO';
                         }
 
                         pendenciasLista += `📦 ${descricao}\n`;
                         pendenciasLista += `   Status: ${status}\n`;
-                        pendenciasLista += `   Previsão: ${dataEntrega}${urgencyLabel}\n\n`;
+                        pendenciasLista += `   Previsão Solicitação: ${dataSolicitacao}\n`;
+                        pendenciasLista += `   Previsão Entrega: ${dataEntrega}${urgencyLabel}\n\n`;
                     });
 
                     pendenciasLista += `${'═'.repeat(80)}\n\n`;
@@ -1633,7 +1677,7 @@
             mostrarNotificacao('🗑️ Filtro removido', 'success');
         }
 
-        // ===== DISPLAY RESULTS =====
+        // ===== DISPLAY RESULTS ===== (CORRIGIDO)
         function exibirResultados(dadosFiltrados = null) {
             const dados = dadosFiltrados || resultadosBusca;
             let html = '';
@@ -1675,12 +1719,16 @@
                         const descricao = item['Descrição Produto'] || 'Descrição não informada';
                         const statusEntrega = item['Status Entrega'] || 'Status não informado';
                         const dataEntrega = item['Dt. Previsão de Entrega'];
-                        const dataFormatada = converterDataExcel(dataEntrega) || 'Não informada';
+                        const dataSolicitacao = item['Data Previsão Solicitação'];
+                        const dataEntregaFormatada = converterDataExcel(dataEntrega) || 'Não informada';
+                        const dataSolicitacaoFormatada = converterDataExcel(dataSolicitacao) || 'Não informada';
                         
                         const urgencia = calcularUrgenciaComSolicitacao(
-                            item['Data Previsão Solicitação'],
-                            item['Dt. Previsão de Entrega']
+                            dataSolicitacao,
+                            dataEntrega
                         );
+                        
+                        const diasAtraso = calcularDiasAtraso(dataSolicitacao, dataEntrega);
                         
                         let statusClasse = 'pendente';
                         const statusLower = String(statusEntrega).toLowerCase();
@@ -1698,13 +1746,20 @@
                             urgencyText = '<span class="urgency-badge warning">🟢 NO PRAZO</span>';
                         }
 
+                        let delayBadge = '';
+                        if (diasAtraso > 0) {
+                            delayBadge = `<span class="delay-badge">⏰ ${diasAtraso} dia${diasAtraso > 1 ? 's' : ''} de atraso</span>`;
+                        }
+
                         itensHTML += `
                             <div class="item-card ${urgencia}">
                                 <div class="item-description">📦 ${descricao}</div>
                                 <div class="item-meta">
                                     <span class="item-status ${statusClasse}">${statusEntrega}</span>
-                                    <span class="item-date">📅 ${dataFormatada}</span>
+                                    <span class="item-date">📅 Solicitação: ${dataSolicitacaoFormatada}</span>
+                                    <span class="item-date">📅 Entrega: ${dataEntregaFormatada}</span>
                                     ${urgencyText}
+                                    ${delayBadge}
                                 </div>
                             </div>
                         `;
@@ -1738,12 +1793,17 @@
             }
 
             const dados = [];
-            dados.push(['O.S.', 'Descrição Produto', 'Status Entrega', 'Data Previsão Entrega', 'Urgência']);
+            dados.push(['O.S.', 'Descrição Produto', 'Status Entrega', 'Previsão Solicitação', 'Previsão Entrega', 'Urgência', 'Dias Atraso']);
 
             resultadosBusca.forEach(resultado => {
                 resultado.itens.forEach(item => {
-                    const dataFormatada = converterDataExcel(item['Dt. Previsão de Entrega']) || 'Não informada';
+                    const dataEntregaFormatada = converterDataExcel(item['Dt. Previsão de Entrega']) || 'Não informada';
+                    const dataSolicitacaoFormatada = converterDataExcel(item['Data Previsão Solicitação']) || 'Não informada';
                     const urgencia = calcularUrgenciaComSolicitacao(
+                        item['Data Previsão Solicitação'],
+                        item['Dt. Previsão de Entrega']
+                    );
+                    const diasAtraso = calcularDiasAtraso(
                         item['Data Previsão Solicitação'],
                         item['Dt. Previsão de Entrega']
                     );
@@ -1761,8 +1821,10 @@
                         resultado.numeroOS,
                         item['Descrição Produto'],
                         item['Status Entrega'],
-                        dataFormatada,
-                        urgencyLabel
+                        dataSolicitacaoFormatada,
+                        dataEntregaFormatada,
+                        urgencyLabel,
+                        diasAtraso > 0 ? diasAtraso : '-'
                     ]);
                 });
             });
@@ -1776,7 +1838,9 @@
                 { wch: 35 },
                 { wch: 25 },
                 { wch: 20 },
-                { wch: 15 }
+                { wch: 20 },
+                { wch: 15 },
+                { wch: 12 }
             ];
 
             XLSX.writeFile(wb, `Pendencias_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.xlsx`);
@@ -1816,15 +1880,20 @@
                 yPosition += 5;
 
                 const tableData = itens.map(item => {
-                    const dataFormatada = converterDataExcel(item['Dt. Previsão de Entrega']) || 'N/I';
+                    const dataEntregaFormatada = converterDataExcel(item['Dt. Previsão de Entrega']) || 'N/I';
+                    const dataSolicitacaoFormatada = converterDataExcel(item['Data Previsão Solicitação']) || 'N/I';
                     const urgencia = calcularUrgenciaComSolicitacao(
+                        item['Data Previsão Solicitação'],
+                        item['Dt. Previsão de Entrega']
+                    );
+                    const diasAtraso = calcularDiasAtraso(
                         item['Data Previsão Solicitação'],
                         item['Dt. Previsão de Entrega']
                     );
                     
                     let urgencyLabel = '';
                     if (urgencia === 'urgent') {
-                        urgencyLabel = 'ATRASADO';
+                        urgencyLabel = `ATRASADO${diasAtraso > 0 ? ` (${diasAtraso}d)` : ''}`;
                     } else if (urgencia === 'warning') {
                         urgencyLabel = 'NO PRAZO';
                     } else {
@@ -1832,32 +1901,34 @@
                     }
 
                     return [
-                        item['Descrição Produto'].substring(0, 40),
-                        item['Status Entrega'],
-                        dataFormatada,
+                        item['Descrição Produto'].substring(0, 35),
+                        item['Status Entrega'].substring(0, 18),
+                        dataSolicitacaoFormatada,
+                        dataEntregaFormatada,
                         urgencyLabel
                     ];
                 });
 
                 doc.autoTable({
                     startY: yPosition,
-                    head: [['Descrição', 'Status', 'Data Previsão', 'Urgência']],
+                    head: [['Descrição', 'Status', 'Prev. Solic.', 'Prev. Entreg', 'Urgência']],
                     body: tableData,
                     theme: 'grid',
                     columnStyles: {
-                        0: { cellWidth: 70 },
-                        1: { cellWidth: 40 },
-                        2: { cellWidth: 30 },
-                        3: { cellWidth: 25 }
+                        0: { cellWidth: 55 },
+                        1: { cellWidth: 35 },
+                        2: { cellWidth: 28 },
+                        3: { cellWidth: 28 },
+                        4: { cellWidth: 30 }
                     },
                     headStyles: {
                         fillColor: [102, 126, 234],
                         textColor: 255,
-                        fontSize: 10,
+                        fontSize: 9,
                         fontStyle: 'bold'
                     },
                     bodyStyles: {
-                        fontSize: 9
+                        fontSize: 8
                     }
                 });
 
