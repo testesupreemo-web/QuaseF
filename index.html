@@ -622,18 +622,26 @@
             </div>
 
             <div id="faturamento-tab" class="tab-content">
-                <div class="empty-state">
-                    <div class="empty-icon">💰</div>
-                    <h3 class="empty-title">Pendências Faturamento</h3>
-                    <p class="empty-text">Este módulo está em desenvolvimento e em breve estará disponível com funcionalidades completas para gerenciar faturamento, faturas pendentes e análises financeiras.</p>
+                <div class="content-grid" style="grid-template-columns: 1fr; max-width: 500px;">
+                    <div class="feature-card link" onclick="window.location.href='faturamento.html';" style="cursor:pointer;">
+                        <span class="icon">💰</span>
+                        <h3 class="feature-title">Pendências Faturamento</h3>
+                        <p class="feature-description">Sistema completo para gerenciar faturamento, faturas pendentes e análises financeiras.</p>
+                        <span class="feature-status">Em Breve</span>
+                        <button class="btn-access" type="button" onclick="event.stopPropagation(); window.location.href='faturamento.html';">Acessar Sistema</button>
+                    </div>
                 </div>
             </div>
 
             <div id="cronogramas-tab" class="tab-content">
-                <div class="empty-state">
-                    <div class="empty-icon">📅</div>
-                    <h3 class="empty-title">Cronogramas</h3>
-                    <p class="empty-text">Ferramentas avançadas de cronogramas estão sendo desenvolvidas. Em breve você terá acesso a calendários, planejamento de projetos e linha do tempo interativa.</p>
+                <div class="content-grid" style="grid-template-columns: 1fr; max-width: 500px;">
+                    <div class="feature-card link" onclick="window.location.href='cronogramas.html';" style="cursor:pointer;">
+                        <span class="icon">📅</span>
+                        <h3 class="feature-title">Gerenciador de Cronogramas</h3>
+                        <p class="feature-description">Sistema completo para planejamento de projetos, visualização de cronogramas e controle de prazos.</p>
+                        <span class="feature-status active">Ativo</span>
+                        <button class="btn-access" type="button" onclick="event.stopPropagation(); window.location.href='cronogramas.html';">Acessar Sistema</button>
+                    </div>
                 </div>
             </div>
 

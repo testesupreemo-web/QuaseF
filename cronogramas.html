@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Cronogramas - Sistema Integrado</title>
+    
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function(){
+            emailjs.init("SemwnDhUgHqJ1l0VG");
+        })();
+    </script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, onValue, update, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAz0AnZ_-IImzWZioHy940uukfpFlZVR2o",
+            authDomain: "planilha-suprema-5bd7f.firebaseapp.com",
+            databaseURL: "https://planilha-suprema-5bd7f-default-rtdb.firebaseio.com",
+            projectId: "planilha-suprema-5bd7f",
+            storageBucket: "planilha-suprema-5bd7f.firebasestorage.app",
+            messagingSenderId: "760644555297",
+            appId: "1:760644555297:web:c538ac1e23df00f5af0960"
+        };
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            const database = getDatabase(app);
+            window.firebaseDB = database;
+            window.firebaseRef = ref;
+            window.firebaseSet = set;
+            window.firebaseOnValue = onValue;
+            window.firebaseUpdate = update;
+            window.firebaseRemove = remove;
+            console.log('Firebase inicializado com sucesso!');
+        } catch (error) {
+            console.error('Erro ao inicializar Firebase:', error);
+        }
+    </script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 50%, #f0f0f0 100%);
+            min-height: 100vh;
+            padding: 30px 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* HEADER */
+        .main-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 24px;
+            padding: 50px 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+            text-align: center;
+        }
+
+        .main-header h1 {
+            font-size: 2.8em;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .main-header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.15em;
+            font-weight: 500;
+        }
+
+        /* CARDS */
+        .card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            border: 1px solid #f0f0f0;
+        }
+
+        .card-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f5f5f5;
+        }
+
+        .card-header h2 {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .card-header p {
+            color: #666;
+            font-size: 0.95em;
+            font-weight: 400;
+        }
+
+        /* UPLOAD SECTION */
+        .upload-area {
+            background: linear-gradient(135deg, #f8f9fe 0%, #f0f2ff 100%);
+            border: 2px dashed #d0d7ff;
+            border-radius: 20px;
+            padding: 50px;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.15);
+        }
+
+        .upload-area.active {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+
+        .upload-icon {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.2));
+        }
+
+        .upload-area h3 {
+            color: #1a1a1a;
+            font-size: 1.4em;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .upload-area p {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-info-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95em;
+            margin-top: 20px;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-transform: none;
+            font-family: 'Poppins', sans-serif;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+        }
+
+        .btn-outline {
+            background: white;
+            border: 2px solid #e5e7eb;
+            color: #4b5563;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .btn-outline:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: #f8f9fe;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* TASK CARDS */
+        .tasks-grid {
+            display: grid;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .task-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            border-left: 4px solid #6b7280;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .task-card:hover {
+            transform: translateX(8px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .task-card.atrasado {
+            border-left-color: #ef4444;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        }
+
+        .task-card.no-prazo {
+            border-left-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+
+        .task-card.concluido {
+            border-left-color: #3b82f6;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            opacity: 0.7;
+        }
+
+        .task-checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: #667eea;
+            flex-shrink: 0;
+        }
+
+        .task-content {
+            flex: 1;
+        }
+
+        .task-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .task-title.indent-1 { padding-left: 20px; }
+        .task-title.indent-2 { padding-left: 40px; }
+        .task-title.indent-3 { padding-left: 60px; }
+
+        .task-meta {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .task-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9em;
+            color: #4b5563;
+            font-weight: 500;
+        }
+
+        .task-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .task-badge.atrasado {
+            background: #ef4444;
+            color: white;
+        }
+
+        .task-badge.no-prazo {
+            background: #10b981;
+            color: white;
+        }
+
+        .task-badge.concluido {
+            background: #3b82f6;
+            color: white;
+        }
+
+        /* EMAIL SECTION */
+        .email-section {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-radius: 20px;
+            padding: 28px;
+            margin-top: 24px;
+            border: 2px solid #3b82f6;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+        }
+
+        .email-section h4 {
+            color: #1e40af;
+            font-weight: 800;
+            margin-bottom: 18px;
+            font-size: 1.15em;
+        }
+
+        .email-input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+
+        .email-input-wrapper input {
+            flex: 1;
+            min-width: 250px;
+            padding: 16px 20px;
+            border: 2px solid #93c5fd;
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            font-size: 15px;
+            background: white;
+        }
+
+        .email-input-wrapper input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .selection-counter {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95em;
+            margin-bottom: 16px;
+        }
+
+        /* FILTERS */
+        .filter-section {
+            background: #f9fafb;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .filter-section h4 {
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #1a1a1a;
+            font-size: 1.1em;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid transparent;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            color: #4b5563;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 14px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 15px;
+            margin-top: 16px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        /* BACK BUTTON */
+        .back-btn {
+            display: inline-block;
+            background: #000;
+            color: #fff;
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .back-btn:hover {
+            background: #333;
+            transform: translateY(-2px);
+        }
+
+        /* NOTIFICATIONS */
+        .notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 20px 28px;
+            border-radius: 16px;
+            font-weight: 700;
+            max-width: 420px;
+            z-index: 10000;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+            animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 30px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            border: 2px dashed #d1d5db;
+        }
+
+        .empty-state h3 {
+            font-size: 1.6em;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: #4b5563;
+        }
+
+        .empty-state p {
+            font-size: 1em;
+            color: #6b7280;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 15px; }
+            .main-header { padding: 35px 25px; }
+            .main-header h1 { font-size: 2em; }
+            .card { padding: 28px 20px; }
+            .action-buttons { flex-direction: column; }
+            .action-buttons .btn { width: 100%; }
+            .email-input-wrapper { flex-direction: column; }
+            .email-input-wrapper input,
+            .email-input-wrapper .btn { width: 100%; }
+            .filter-buttons { flex-direction: column; }
+            .filter-btn { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href='index.html'">← Voltar ao Dashboard</button>
+
+    <div class="container">
+        <!-- HEADER -->
+        <div class="main-header">
+            <h1>📅 Gerenciador de Cronogramas</h1>
+            <p>Importe arquivos XML do MS Project e envie cobranças por email</p>
+        </div>
+
+        <!-- UPLOAD CARD -->
+        <div class="card">
+            <div class="card-header">
+                <h2>📤 Upload do Cronograma</h2>
+                <p>Faça upload do arquivo XML exportado do Microsoft Project</p>
+            </div>
+
+            <div class="file-input-wrapper">
+                <input type="file" id="xmlFile" accept=".xml" onchange="processarXML(this)">
+                <label for="xmlFile">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">📁</div>
+                        <h3>Clique para selecionar o arquivo XML</h3>
+                        <p>Exporte do MS Project: Arquivo > Salvar Como > XML</p>
+                    </div>
+                </label>
+            </div>
+
+            <div id="fileInfo" class="hidden">
+                <div class="file-info-badge">
+                    <span>✅</span>
+                    <span id="fileName">Arquivo carregado</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- FILTER SECTION -->
+        <div id="filterSection" class="card hidden">
+            <div class="filter-section">
+                <h4>🔍 Filtros</h4>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="filtrarTarefas('todos')">Todos</button>
+                    <button class="filter-btn" onclick="filtrarTarefas('atrasado')">🔴 Atrasados</button>
+                    <button class="filter-btn" onclick="filtrarTarefas('no-prazo')">🟢 No Prazo</button>
+                    <button class="filter-btn" onclick="filtrarTarefas('concluido')">✅ Concluídos</button>
+                </div>
+                <input type="text" class="search-box" id="searchBox" placeholder="🔎 Buscar tarefa por nome..." oninput="buscarTarefa()">
+            </div>
+
+            <div class="selection-counter" id="selectionCounter">
+                0 tarefas selecionadas
+            </div>
+        </div>
+
+        <!-- TASKS CONTAINER -->
+        <div id="tasksContainer"></div>
+
+        <!-- EMAIL SECTION -->
+        <div id="emailSection" class="email-section hidden">
+            <h4>📧 Enviar Cobrança por Email</h4>
+            <div class="email-input-wrapper">
+                <input type="email" id="emailDestino" placeholder="Digite o email do destinatário">
+                <button class="btn btn-primary" onclick="enviarEmail()">📨 Enviar</button>
+                <button class="btn btn-outline" onclick="fecharEmailSection()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tarefasOriginais = [];
+        let tarefasFiltradas = [];
+        let filtroAtivo = 'todos';
+
+        // PROCESSAR XML
+        function processarXML(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            console.log('Processando arquivo:', file.name);
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(e.target.result, "text/xml");
+                    
+                    // Extrair tarefas do XML
+                    const tasks = xmlDoc.getElementsByTagName('Task');
+                    tarefasOriginais = [];
+
+                    for (let task of tasks) {
+                        const id = getXMLValue(task, 'UID');
+                        const nome = getXMLValue(task, 'Name');
+                        const duracao = getXMLValue(task, 'Duration');
+                        const inicio = getXMLValue(task, 'Start');
+                        const fim = getXMLValue(task, 'Finish');
+                        const percentComplete = getXMLValue(task, 'PercentComplete') || '0';
+                        const outlineLevel = getXMLValue(task, 'OutlineLevel') || '0';
+
+                        if (nome) {
+                            const tarefaObj = {
+                                id: id,
+                                nome: nome,
+                                duracao: formatarDuracao(duracao),
+                                inicio: formatarData(inicio),
+                                fim: formatarData(fim),
+                                percentComplete: parseInt(percentComplete),
+                                outlineLevel: parseInt(outlineLevel),
+                                status: calcularStatus(fim, parseInt(percentComplete)),
+                                selecionada: false
+                            };
+
+                            tarefasOriginais.push(tarefaObj);
+                        }
+                    }
+
+                    if (tarefasOriginais.length === 0) {
+                        mostrarNotificacao('Nenhuma tarefa encontrada no arquivo XML', 'error');
+                        return;
+                    }
+
+                    document.getElementById('fileName').textContent = file.name;
+                    document.getElementById('fileInfo').classList.remove('hidden');
+                    document.getElementById('uploadArea').classList.add('active');
+                    document.getElementById('filterSection').classList.remove('hidden');
+                    
+                    tarefasFiltradas = [...tarefasOriginais];
+                    exibirTarefas();
+                    
+                    mostrarNotificacao(`✅ ${tarefasOriginais.length} tarefas carregadas!`, 'success');
+
+                } catch (error) {
+                    console.error('Erro ao processar XML:', error);
+                    mostrarNotificacao('Erro ao processar arquivo XML', 'error');
+                }
+            };
+
+            reader.readAsText(file);
+        }
+
+        function getXMLValue(node, tagName) {
+            const element = node.getElementsByTagName(tagName)[0];
+            return element ? element.textContent : '';
+        }
+
+        function formatarDuracao(duracao) {
+            if (!duracao) return 'N/A';
+            // Duration no MS Project vem em formato PT<hours>H<minutes>M<seconds>S
+            const match = duracao.match(/PT(\d+)H/);
+            if (match) {
+                const horas = parseInt(match[1]);
+                const dias = Math.floor(horas / 8); // 8 horas = 1 dia útil
+                return dias > 0 ? `${dias} dia${dias > 1 ? 's' : ''}` : `${horas}h`;
+            }
+            return duracao;
+        }
+
+        function formatarData(dataISO) {
+            if (!dataISO) return 'N/A';
+            const data = new Date(dataISO);
+            const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            const dia = String(data.getDate()).padStart(2, '0');
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const ano = data.getFullYear().toString().slice(-2);
+            const diaSemana = diasSemana[data.getDay()];
+            return `${diaSemana} ${dia}/${mes}/${ano}`;
+        }
+
+        function calcularStatus(dataFim, percentComplete) {
+            if (percentComplete >= 100) return 'concluido';
+            
+            if (!dataFim) return 'no-prazo';
+            
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            const fim = new Date(dataFim);
+            fim.setHours(0, 0, 0, 0);
+
+            if (fim < hoje) return 'atrasado';
+            return 'no-prazo';
+        }
+
+        // EXIBIR TAREFAS
+        function exibirTarefas() {
+            const container = document.getElementById('tasksContainer');
+            
+            if (tarefasFiltradas.length === 0) {
+                container.innerHTML = `
+                    <div class="card">
+                        <div class="empty-state">
+                            <h3>Nenhuma tarefa encontrada</h3>
+                            <p>Ajuste os filtros ou faça uma nova busca</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="card"><div class="tasks-grid">';
+
+            tarefasFiltradas.forEach(tarefa => {
+                const indentClass = `indent-${Math.min(tarefa.outlineLevel, 3)}`;
+                const statusBadge = tarefa.status === 'atrasado' ? '🔴 ATRASADO' :
+                                  tarefa.status === 'no-prazo' ? '🟢 NO PRAZO' :
+                                  '✅ CONCLUÍDO';
+
+                html += `
+                    <div class="task-card ${tarefa.status}" data-id="${tarefa.id}">
+                        <input type="checkbox" class="task-checkbox" onchange="toggleTarefa('${tarefa.id}')" ${tarefa.selecionada ? 'checked' : ''}>
+                        <div class="task-content">
+                            <div class="task-title ${indentClass}">${tarefa.nome}</div>
+                            <div class="task-meta">
+                                <span class="task-meta-item">⏱️ ${tarefa.duracao}</span>
+                                <span class="task-meta-item">📅 Início: ${tarefa.inicio}</span>
+                                <span class="task-meta-item">📅 Fim: ${tarefa.fim}</span>
+                                <span class="task-meta-item">📊 ${tarefa.percentComplete}%</span>
+                            </div>
+                            <span class="task-badge ${tarefa.status}">${statusBadge}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div></div>';
+            container.innerHTML = html;
+
+            atualizarContador();
+        }
+
+        // FILTROS
+        function filtrarTarefas(tipo) {
+            filtroAtivo = tipo;
+            
+            // Atualizar botões
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (tipo === 'todos') {
+                tarefasFiltradas = [...tarefasOriginais];
+            } else {
+                tarefasFiltradas = tarefasOriginais.filter(t => t.status === tipo);
+            }
+
+            exibirTarefas();
+            mostrarNotificacao(`Filtro aplicado: ${tarefasFiltradas.length} tarefa(s)`, 'info');
+        }
+
+        function buscarTarefa() {
+            const termo = document.getElementById('searchBox').value.toLowerCase();
+            
+            if (termo === '') {
+                filtrarTarefas(filtroAtivo);
+                return;
+            }
+
+            tarefasFiltradas = tarefasOriginais.filter(t => 
+                t.nome.toLowerCase().includes(termo)
+            );
+
+            exibirTarefas();
+        }
+
+        // SELEÇÃO
+        function toggleTarefa(id) {
+            const tarefa = tarefasOriginais.find(t => t.id === id);
+            if (tarefa) {
+                tarefa.selecionada = !tarefa.selecionada;
+                atualizarContador();
+            }
+        }
+
+        function atualizarContador() {
+            const selecionadas = tarefasOriginais.filter(t => t.selecionada).length;
+            document.getElementById('selectionCounter').textContent = 
+                `${selecionadas} tarefa${selecionadas !== 1 ? 's' : ''} selecionada${selecionadas !== 1 ? 's' : ''}`;
+
+            // Mostrar/ocultar seção de email
+            if (selecionadas > 0) {
+                document.getElementById('emailSection').classList.remove('hidden');
+            } else {
+                document.getElementById('emailSection').classList.add('hidden');
+            }
+        }
+
+        // EMAIL
+        function enviarEmail() {
+            const email = document.getElementById('emailDestino').value.trim();
+            
+            if (!email) {
+                mostrarNotificacao('Digite um email válido', 'error');
+                return;
+            }
+
+            if (!validarEmail(email)) {
+                mostrarNotificacao('Email inválido', 'error');
+                return;
+            }
+
+            const selecionadas = tarefasOriginais.filter(t => t.selecionada);
+
+            if (selecionadas.length === 0) {
+                mostrarNotificacao('Selecione pelo menos uma tarefa', 'error');
+                return;
+            }
+
+            mostrarNotificacao('Enviando email...', 'info');
+
+            // Montar conteúdo do email
+            let listaHTML = '';
+            let listaTexto = '';
+
+            selecionadas.forEach(tarefa => {
+                const statusEmoji = tarefa.status === 'atrasado' ? '🔴' :
+                                  tarefa.status === 'no-prazo' ? '🟢' : '✅';
+                
+                listaTexto += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+                listaTexto += `${statusEmoji} ${tarefa.nome}\n`;
+                listaTexto += `⏱️ Duração: ${tarefa.duracao}\n`;
+                listaTexto += `📅 Início: ${tarefa.inicio} | Fim: ${tarefa.fim}\n`;
+                listaTexto += `📊 Progresso: ${tarefa.percentComplete}%\n`;
+                listaTexto += `Status: ${tarefa.status === 'atrasado' ? 'ATRASADO' : tarefa.status === 'no-prazo' ? 'NO PRAZO' : 'CONCLUÍDO'}\n`;
+                listaTexto += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+            });
+
+            const templateParams = {
+                to_email: email,
+                title: `Cobrança - Tarefas Pendentes do Cronograma`,
+                data_envio: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR'),
+                total_tarefas: selecionadas.length,
+                tarefas_atrasadas: selecionadas.filter(t => t.status === 'atrasado').length,
+                tarefas_no_prazo: selecionadas.filter(t => t.status === 'no-prazo').length,
+                lista_tarefas: listaTexto
+            };
+
+            emailjs.send('service_k842br2', 'template_epk32wl', templateParams)
+                .then(response => {
+                    mostrarNotificacao('✅ Email enviado com sucesso!', 'success');
+                    fecharEmailSection();
+                    
+                    // Desmarcar todas
+                    tarefasOriginais.forEach(t => t.selecionada = false);
+                    exibirTarefas();
+                })
+                .catch(error => {
+                    console.error('Erro ao enviar email:', error);
+                    mostrarNotificacao('❌ Erro ao enviar email', 'error');
+                });
+        }
+
+        function fecharEmailSection() {
+            document.getElementById('emailSection').classList.add('hidden');
+            document.getElementById('emailDestino').value = '';
+        }
+
+        function validarEmail(email) {
+            return /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+        }
+
+        // NOTIFICAÇÕES
+        function mostrarNotificacao(mensagem, tipo = 'success') {
+            const notificacao = document.createElement('div');
+            notificacao.className = `notification ${tipo}`;
+            notificacao.textContent = mensagem;
+            document.body.appendChild(notificacao);
+
+            setTimeout(() => {
+                notificacao.remove();
+            }, 3500);
+        }
+
+        // INIT
+        window.addEventListener('load', () => {
+            console.log('Sistema de Cronogramas inicializado');
+        });
+    </script>
+</body>
+</html>
