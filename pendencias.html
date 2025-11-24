@@ -1298,7 +1298,7 @@
         <!-- Botões de Toggle -->
         <div class="toggle-buttons">
             <button class="btn-toggle" onclick="toggleSection('email')">
-                ✉️ Alertas & Exportação
+                ✉️ E-mail & Exportação
             </button>
             <button class="btn-toggle" onclick="abrirModalAdicionar()">
                 ➕ Adicionar Pendência
@@ -1311,22 +1311,23 @@
         <!-- Seção de Email/Exportação (inicialmente oculta) -->
         <div id="sectionEmail" class="collapsible-section">
             <div class="glass-card email-config-card">
-                <h3>✉️ Alertas por Email</h3>
+                <h3>✉️ Enviar E-mail</h3>
                 <p>Digite o email que deseja receber notificações de pendências atrasadas</p>
                 <input type="email" id="emailDestino" class="config-input" placeholder="exemplo@email.com" required>
                 <div class="feature-buttons">
-                    <button class="btn-email" onclick="enviarAlertaPendencias()">📤 Enviar Alerta</button>
+                    <button class="btn-email" onclick="enviarAlertaPendencias()">📤 Enviar E-mail</button>
                     <button class="btn-feature" onclick="gerarRelatorioPDF()">📄 Gerar Relatório PDF</button>
                     <button class="btn-feature" onclick="exportarExcel()" style="background: var(--success);">📊 Exportar Excel</button>
                 </div>
 
-                <div class="ms-todo-config">
-                    <h4>📋 Microsoft To Do</h4>
-                    <p>Clique em "📋 To Do" na pendência, ela abrirá no To Do com os dados copiados. Cole com Ctrl+V</p>
-                </div>
             </div>
         </div>
 
+        <div class="ms-todo-config">
+            <h4>📋 Microsoft To Do</h4>
+            <p>Clique em "📋 To Do" na pendência, ela abrirá no To Do com os dados copiados. Cole com Ctrl+V</p>
+        </div>
+        
         <!-- Seção de Busca e Filtros (inicialmente oculta) -->
         <div id="sectionFiltros" class="collapsible-section">
             <div class="glass-card">
