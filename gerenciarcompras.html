@@ -1073,218 +1073,6 @@
             publicKey: 'SemwnDhUgHqJ1l0VG'
         };
 
-        // ===== NOVA FUNÇÃO: Calcular dias de atraso =====
-        function calcularDiasAtraso(dataPrevisaoSolicitacao, dataPrevisaoEntrega) {
-            const dataSolicitacao = converterDataExcelParaDate(dataPrevisaoSolicitacao);
-            const dataEntrega = converterDataExcelParaDate(dataPrevisaoEntrega);
-            const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
-            
-            if (!dataSolicitacao || !dataEntrega) {
-                return null;
-            }
-
-            let diasAtraso = 0;
-            
-            // Se hoje passou da data de solicitação
-            if (hoje > dataSolicitacao) {
-                diasAtraso = Math.floor((hoje - dataSolicitacao) / (1000 * 60 * 60 * 24));
-            }
-            // Se a data de entrega é maior que a solicitação
-            else if (dataEntrega > dataSolicitacao) {
-                diasAtraso = Math.floor((dataEntrega - dataSolicitacao) / (1000 * 60 * 60 * 24));
-            }
-            
-            return diasAtraso > 0 ? diasAtraso : 0;
-        }
-
-        // ===== EMAIL FUNCTIONS =====
-        function abrirEnvioEmail() {
-            if (resultadosBusca.length === 0) {
-                mostrarNotificacao('⚠️ Realize uma busca primeiro', 'error');
-                return;
-            }
-            document.getElementById('emailSection').classList.remove('hidden');
-            document.getElementById('emailDestino').focus();
-        }
-
-        function fecharEnvioEmail() {
-            document.getElementById('emailSection').classList.add('hidden');
-            document.getElementById('emailDestino').value = '';
-        }
-
-        function confirmarEnvioEmail() {
-            const email = document.getElementById('emailDestino').value.trim();
-            
-            if (!email) {
-                mostrarNotificacao('⚠️ Digite um email válido', 'error');
-                return;
-            }
-
-            if (!validarEmail(email)) {
-                mostrarNotificacao('⚠️ Email inválido', 'error');
-                return;
-            }
-
-            enviarEmailComEmailJS(email);
-        }
-
-        function validarEmail(email) {
-            return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
-        }
-
-// ===== EMAIL FUNCTIONS (VERSÃO CORRIGIDA COMPLETA) =====
-function abrirEnvioEmail() {
-    if (resultadosBusca.length === 0) {
-        mostrarNotificacao('⚠️ Realize uma busca primeiro', 'error');
-        return;
-    }
-    
-    // Se há mais de uma O.S., perguntar qual enviar
-    if (resultadosBusca.length > 1) {
-        mostrarNotificacao('⚠️ Selecione apenas uma O.S. para enviar por email', 'error');
-        return;
-    }
-    
-    document.getElementById('emailSection').classList.remove('hidden');
-    document.getElementById('emailDestino').focus();
-}
-
-function fecharEnvioEmail() {
-    document.getElementById('emailSection').classList.add('hidden');
-    document.getElementById('emailDestino').value = '';
-}
-
-function confirmarEnvioEmail() {
-    const email = document.getElementById('emailDestino').value.trim();
-    
-    if (!email) {
-        mostrarNotificacao('⚠️ Digite um email válido', 'error');
-        return;
-    }
-
-    if (!validarEmail(email)) {
-        mostrarNotificacao('⚠️ Email inválido', 'error');
-        return;
-    }
-
-    enviarEmailComEmailJS(email);
-}
-
-function validarEmail(email) {
-    return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
-}
-
-function enviarEmailComEmailJS(emailDestino) {
-    mostrarNotificacao('📤 Preparando email...', 'info');
-
-    // Pegar apenas a primeira (e única) O.S.
-    const resultado = resultadosBusca[0];
-    
-    if (!resultado) {
-        mostrarNotificacao('❌ Nenhuma O.S. encontrada', 'error');
-        return;
-    }
-
-    const { numeroOS, itens, totalItens } = resultado;
-
-    console.log('📊 Dados da O.S.:', { numeroOS, totalItens, itensCount: itens.length });
-
-    let totalPendencias = itens.length;
-    let totalAtrasadas = 0;
-    let totalNoPrazo = 0;
-
-    // Calcular totais
-    itens.forEach(item => {
-        const urgencia = calcularUrgenciaComSolicitacao(
-            item['Data Previsão Solicitação'],
-            item['Dt. Previsão de Entrega']
-        );
-        if (urgencia === 'urgent') totalAtrasadas++;
-        if (urgencia === 'warning') totalNoPrazo++;
-    });
-
-    // Criar lista de pendências DETALHADA
-    let pendenciasLista = '';
-    
-    itens.forEach((item, index) => {
-        const descricao = item['Descrição Produto'] || item['Descricao Produto'] || item['descricao'] || 'Descrição não informada';
-        const status = item['Status Entrega'] || item['status'] || 'Status não informado';
-        const dataEntrega = converterDataExcel(item['Dt. Previsão de Entrega']) || converterDataExcel(item['Data Previsao Entrega']) || 'Não informada';
-        const dataSolicitacao = converterDataExcel(item['Data Previsão Solicitação']) || converterDataExcel(item['Data Previsao Solicitacao']) || 'Não informada';
-        const diasAtraso = calcularDiasAtraso(
-            item['Data Previsão Solicitação'],
-            item['Dt. Previsão de Entrega']
-        );
-        const urgencia = calcularUrgenciaComSolicitacao(
-            item['Data Previsão Solicitação'],
-            item['Dt. Previsão de Entrega']
-        );
-
-        let urgencyLabel = '';
-        if (urgencia === 'urgent') {
-            urgencyLabel = `🔴 ATRASADO`;
-            if (diasAtraso > 0) {
-                urgencyLabel += ` (${diasAtraso} dia${diasAtraso > 1 ? 's' : ''})`;
-            }
-        } else if (urgencia === 'warning') {
-            urgencyLabel = '🟢 NO PRAZO';
-        }
-
-        console.log(`Item ${index + 1}:`, { descricao, status});
-
-        pendenciasLista += `─────────────────────────────────────────────────\n`;
-        pendenciasLista += `ITEM ${index + 1}\n\n`;
-        pendenciasLista += `📦 Produto: ${descricao}\n\n`;
-        pendenciasLista += `   ⚙️  Status: ${status}\n`;
-        pendenciasLista += `   📅 Data Solicitação PCP: ${dataSolicitacao}\n`;
-        pendenciasLista += `   📅 Previsão Entrega: ${dataEntrega}\n`;
-        
-        if (diasAtraso > 0) {
-            pendenciasLista += `   ⏰ Dias de Atraso: ${diasAtraso}\n`;
-        }
-        
-        pendenciasLista += `\n`;
-    });
-
-    // Data formatada
-    const agora = new Date();
-    const dataFormatada = `${String(agora.getDate()).padStart(2, '0')}/${String(agora.getMonth() + 1).padStart(2, '0')}/${agora.getFullYear()} às ${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
-
-    // Parâmetros do template
-    const templateParams = {
-        to_email: emailDestino,
-        numero_os: String(numeroOS),
-        total_pendencias: String(totalPendencias),
-        total_atrasadas: String(totalAtrasadas),
-        total_no_prazo: String(totalNoPrazo),
-        pendencias_lista: pendenciasLista,
-        data_envio: dataFormatada
-    };
-
-    console.log('📧 Enviando email com os seguintes dados:');
-    console.log('Destinatário:', emailDestino);
-    console.log('Número O.S.:', templateParams.numero_os);
-    console.log('Total Pendências:', templateParams.total_pendencias);
-    console.log('Lista de Pendências (primeiros 500 chars):', pendenciasLista.substring(0, 500));
-
-    // Enviar email
-    mostrarNotificacao('📤 Enviando email...', 'info');
-    
-    emailjs.send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, templateParams)
-        .then(response => {
-            console.log('✅ Email enviado com sucesso!', response);
-            mostrarNotificacao(`✅ Email enviado para ${emailDestino}!`, 'success');
-            fecharEnvioEmail();
-        })
-        .catch(error => {
-            console.error('❌ Erro ao enviar email:', error);
-            console.error('Detalhes do erro:', error.text || error.message);
-            mostrarNotificacao('❌ Erro ao enviar email. Verifique o console (F12).', 'error');
-        });
-}
-
-
         // ===== FIREBASE FUNCTIONS =====
         function salvarOSAoDigitar(input) {
             const valor = input.value.trim();
@@ -1578,7 +1366,7 @@ function enviarEmailComEmailJS(emailDestino) {
             return dataResultado;
         }
 
-        // ===== NOVA LÓGICA DE URGÊNCIA =====
+        // ===== LÓGICA DE URGÊNCIA (CORRIGIDA FINAL) =====
         function calcularUrgenciaComSolicitacao(dataPrevisaoSolicitacao, dataPrevisaoEntrega) {
             const dataSolicitacao = converterDataExcelParaDate(dataPrevisaoSolicitacao);
             const dataEntrega = converterDataExcelParaDate(dataPrevisaoEntrega);
@@ -1589,16 +1377,183 @@ function enviarEmailComEmailJS(emailDestino) {
                 return 'sem-data';
             }
 
-            // 🔴 ATRASADO se:
-            // 1. Data Entrega > Data Solicitação (prazo estimado já está ruim)
-            // 2. OU Hoje > Data Solicitação (prazo venceu e não foi entregue)
-            if (dataEntrega > dataSolicitacao || hoje > dataSolicitacao) {
+            // CASO 1: Fornecedor prometeu para DEPOIS do prazo necessário
+            if (dataEntrega > dataSolicitacao) {
                 return 'urgent';
             }
             
-            // 🟢 NO PRAZO
-            // Data Entrega <= Data Solicitação E ainda não venceu
+            // CASO 2: Fornecedor prometeu DENTRO do prazo, MAS hoje passou do prazo necessário
+            if (hoje > dataSolicitacao) {
+                return 'urgent';
+            }
+            
+            // CASO 3: Fornecedor prometeu dentro do prazo E ainda não passou do prazo necessário
             return 'warning';
+        }
+
+        // ===== FUNÇÃO: Calcular dias de atraso (CORRIGIDA DEFINITIVA) =====
+        function calcularDiasAtraso(dataPrevisaoSolicitacao, dataPrevisaoEntrega) {
+            const dataSolicitacao = converterDataExcelParaDate(dataPrevisaoSolicitacao);
+            const dataEntrega = converterDataExcelParaDate(dataPrevisaoEntrega);
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            
+            if (!dataSolicitacao || !dataEntrega) {
+                return null;
+            }
+
+            let diasAtraso = 0;
+            
+            // PRIORIDADE 1: Se hoje passou da data de ENTREGA (não entregou nem na previsão)
+            if (hoje > dataEntrega) {
+                // Conta do dia que você precisava (solicitação) até HOJE
+                diasAtraso = Math.floor((hoje - dataSolicitacao) / (1000 * 60 * 60 * 24));
+            }
+            // PRIORIDADE 2: Se a data de entrega é maior que a solicitação (fornecedor prometeu tarde)
+            else if (dataEntrega > dataSolicitacao) {
+                // Conta a diferença entre entrega e solicitação
+                diasAtraso = Math.floor((dataEntrega - dataSolicitacao) / (1000 * 60 * 60 * 24));
+            }
+            // PRIORIDADE 3: Se hoje passou da solicitação (mas entrega era dentro do prazo)
+            else if (hoje > dataSolicitacao) {
+                // Conta do dia que você precisava até hoje
+                diasAtraso = Math.floor((hoje - dataSolicitacao) / (1000 * 60 * 60 * 24));
+            }
+            
+            return diasAtraso > 0 ? diasAtraso : 0;
+        }
+
+        // ===== EMAIL FUNCTIONS =====
+        function abrirEnvioEmail() {
+            if (resultadosBusca.length === 0) {
+                mostrarNotificacao('⚠️ Realize uma busca primeiro', 'error');
+                return;
+            }
+            
+            if (resultadosBusca.length > 1) {
+                mostrarNotificacao('⚠️ Selecione apenas uma O.S. para enviar por email', 'error');
+                return;
+            }
+            
+            document.getElementById('emailSection').classList.remove('hidden');
+            document.getElementById('emailDestino').focus();
+        }
+
+        function fecharEnvioEmail() {
+            document.getElementById('emailSection').classList.add('hidden');
+            document.getElementById('emailDestino').value = '';
+        }
+
+        function confirmarEnvioEmail() {
+            const email = document.getElementById('emailDestino').value.trim();
+            
+            if (!email) {
+                mostrarNotificacao('⚠️ Digite um email válido', 'error');
+                return;
+            }
+
+            if (!validarEmail(email)) {
+                mostrarNotificacao('⚠️ Email inválido', 'error');
+                return;
+            }
+
+            enviarEmailComEmailJS(email);
+        }
+
+        function validarEmail(email) {
+            return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+        }
+
+        function enviarEmailComEmailJS(emailDestino) {
+            mostrarNotificacao('📤 Preparando email...', 'info');
+
+            const resultado = resultadosBusca[0];
+            
+            if (!resultado) {
+                mostrarNotificacao('❌ Nenhuma O.S. encontrada', 'error');
+                return;
+            }
+
+            const { numeroOS, itens, totalItens } = resultado;
+
+            let totalPendencias = itens.length;
+            let totalAtrasadas = 0;
+            let totalNoPrazo = 0;
+
+            itens.forEach(item => {
+                const urgencia = calcularUrgenciaComSolicitacao(
+                    item['Data Previsão Solicitação'],
+                    item['Dt. Previsão de Entrega']
+                );
+                if (urgencia === 'urgent') totalAtrasadas++;
+                if (urgencia === 'warning') totalNoPrazo++;
+            });
+
+            let pendenciasLista = '';
+            
+            itens.forEach((item, index) => {
+                const descricao = item['Descrição Produto'] || item['Descricao Produto'] || item['descricao'] || 'Descrição não informada';
+                const status = item['Status Entrega'] || item['status'] || 'Status não informado';
+                const dataEntrega = converterDataExcel(item['Dt. Previsão de Entrega']) || converterDataExcel(item['Data Previsao Entrega']) || 'Não informada';
+                const dataSolicitacao = converterDataExcel(item['Data Previsão Solicitação']) || converterDataExcel(item['Data Previsao Solicitacao']) || 'Não informada';
+                const diasAtraso = calcularDiasAtraso(
+                    item['Data Previsão Solicitação'],
+                    item['Dt. Previsão de Entrega']
+                );
+                const urgencia = calcularUrgenciaComSolicitacao(
+                    item['Data Previsão Solicitação'],
+                    item['Dt. Previsão de Entrega']
+                );
+
+                let urgencyLabel = '';
+                if (urgencia === 'urgent') {
+                    urgencyLabel = `🔴 ATRASADO`;
+                    if (diasAtraso > 0) {
+                        urgencyLabel += ` (${diasAtraso} dia${diasAtraso > 1 ? 's' : ''})`;
+                    }
+                } else if (urgencia === 'warning') {
+                    urgencyLabel = '🟢 NO PRAZO';
+                }
+
+                pendenciasLista += `─────────────────────────────────────────────────\n`;
+                pendenciasLista += `ITEM ${index + 1}\n\n`;
+                pendenciasLista += `📦 Produto: ${descricao}\n\n`;
+                pendenciasLista += `   ⚙️  Status: ${status}\n`;
+                pendenciasLista += `   📅 Data Solicitação PCP: ${dataSolicitacao}\n`;
+                pendenciasLista += `   📅 Previsão Entrega: ${dataEntrega}\n`;
+                
+                if (diasAtraso > 0) {
+                    pendenciasLista += `   ⏰ Dias de Atraso: ${diasAtraso}\n`;
+                }
+                
+                pendenciasLista += `\n`;
+            });
+
+            const agora = new Date();
+            const dataFormatada = `${String(agora.getDate()).padStart(2, '0')}/${String(agora.getMonth() + 1).padStart(2, '0')}/${agora.getFullYear()} às ${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
+
+            const templateParams = {
+                to_email: emailDestino,
+                numero_os: String(numeroOS),
+                total_pendencias: String(totalPendencias),
+                total_atrasadas: String(totalAtrasadas),
+                total_no_prazo: String(totalNoPrazo),
+                pendencias_lista: pendenciasLista,
+                data_envio: dataFormatada
+            };
+
+            mostrarNotificacao('📤 Enviando email...', 'info');
+            
+            emailjs.send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, templateParams)
+                .then(response => {
+                    console.log('✅ Email enviado com sucesso!', response);
+                    mostrarNotificacao(`✅ Email enviado para ${emailDestino}!`, 'success');
+                    fecharEnvioEmail();
+                })
+                .catch(error => {
+                    console.error('❌ Erro ao enviar email:', error);
+                    mostrarNotificacao('❌ Erro ao enviar email. Verifique o console (F12).', 'error');
+                });
         }
 
         // ===== SEARCH =====
@@ -1748,7 +1703,7 @@ function enviarEmailComEmailJS(emailDestino) {
             mostrarNotificacao('🗑️ Filtro removido', 'success');
         }
 
-        // ===== DISPLAY RESULTS ===== (CORRIGIDO)
+        // ===== DISPLAY RESULTS =====
         function exibirResultados(dadosFiltrados = null) {
             const dados = dadosFiltrados || resultadosBusca;
             let html = '';
