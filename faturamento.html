@@ -91,11 +91,6 @@
             color: white;
         }
 
-        .btn-import {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            color: white;
-        }
-
         .btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 25px rgba(0,0,0,0.2);
@@ -279,7 +274,6 @@
             transform: scale(1.08);
         }
 
-        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -439,17 +433,6 @@
             color: #666;
         }
 
-        .info-box {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: inline-block;
-            font-weight: 600;
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
-        }
-
         @media (max-width: 768px) {
             .header h1 { font-size: 1.8em; }
             .form-grid { grid-template-columns: 1fr; }
@@ -459,7 +442,6 @@
             th, td { padding: 10px 8px; }
         }
 
-        /* Scrollbar */
         ::-webkit-scrollbar {
             width: 12px;
             height: 12px;
@@ -501,7 +483,6 @@
             <button class="tab-btn" onclick="switchTab('concluidos')">✅ Concluídos</button>
         </div>
 
-        <!-- Tab Pendentes -->
         <div id="tab-pendentes" class="tab-content active">
             <div class="counter" id="counterPendentes">0 itens pendentes</div>
             <div class="table-wrapper">
@@ -535,7 +516,6 @@
             </div>
         </div>
 
-        <!-- Tab Concluídos -->
         <div id="tab-concluidos" class="tab-content">
             <div class="counter" id="counterConcluidos">0 itens concluídos</div>
             <div class="table-wrapper">
@@ -570,7 +550,6 @@
         </div>
     </div>
 
-    <!-- Modal Adicionar/Editar -->
     <div id="modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -640,13 +619,31 @@
         </div>
     </div>
 
-    <script>
-        // Dados pré-cadastrados do Excel
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, push, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyAz0AnZ-IImzWZioHy940uukfpFlZVR2o",
+            authDomain: "planilha-suprema-5bd7f.firebaseapp.com",
+            databaseURL: "https://planilha-suprema-5bd7f-default-rtdb.firebaseio.com",
+            projectId: "planilha-suprema-5bd7f",
+            storageBucket: "planilha-suprema-5bd7f.appspot.com",
+            messagingSenderId: "760644555297",
+            appId: "1:760644555297:web:c538ac1e23df00f5af0960"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        function generateId() {
+            return 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
         const dadosIniciais = [
             { id: generateId(), proposta: "35319-1", cliente: "Usina da Pedra", valor: "R$ 238.872,00", numeroOS: "21336", contratos: "RICARDO", faturamentoMes: "12", prioridadeFaturamento: "2025-11-14", previsaoEntrega: "2025-12-20", previsaoFaturamento: "Dezembro", dataAnalise: "", status: "OK", concluido: false },
             { id: generateId(), proposta: "35569", cliente: "ABB carga e descarga ( modec)", valor: "R$ 3.303,00", numeroOS: "20690", contratos: "RICARDO", faturamentoMes: "12", prioridadeFaturamento: "2025-11-05", previsaoEntrega: "2025-12-01", previsaoFaturamento: "Dezembro", dataAnalise: "", status: "OK", concluido: false },
             { id: generateId(), proposta: "34478", cliente: "ABB SAMA", valor: "R$ 109.404,00", numeroOS: "21116", contratos: "RICARDO", faturamentoMes: "12", prioridadeFaturamento: "2025-11-03", previsaoEntrega: "2025-12-01", previsaoFaturamento: "Dezembro", dataAnalise: "", status: "OK", concluido: false },
-            { id: generateId(), proposta: "35050", cliente: "ABB carga e descarga", valor: "R$ 5.285,00", numeroOS: "20690", contratos: "RICARDO", faturamentoMes: "12", prioridadeFaturamento: "2025-11-03", previsaoEntrega: "2025-11-03", previsaoFaturamento: "Novembro", dataAnalise: "", status: "OK", concluido: false },
             { id: generateId(), proposta: "30730", cliente: "Goodyear", valor: "R$ 167.708,00", numeroOS: "18321", contratos: "RICARDO", faturamentoMes: "12", prioridadeFaturamento: "2025-10-27", previsaoEntrega: "2025-12-01", previsaoFaturamento: "Dezembro", dataAnalise: "", status: "OK", concluido: false },
             { id: generateId(), proposta: "35358-1", cliente: "ARCELORMITTAL BRASIL S.A.", valor: "R$ 39.800,00", numeroOS: "21221", contratos: "RICARDO", faturamentoMes: "12", prioridadeFaturamento: "2025-10-20", previsaoEntrega: "2025-10-20", previsaoFaturamento: "Dezembro", dataAnalise: "2025-10-27", status: "OK", concluido: false },
             { id: generateId(), proposta: "35358", cliente: "ARCELORMITTAL BRASIL S.A.", valor: "R$ 370.000,00", numeroOS: "21221", contratos: "RICARDO", faturamentoMes: "12", prioridadeFaturamento: "2025-10-12", previsaoEntrega: "2025-10-27", previsaoFaturamento: "Dezembro", dataAnalise: "", status: "OK", concluido: false },
@@ -662,12 +659,12 @@
             { id: generateId(), proposta: "33709", cliente: "Intercement", valor: "R$ 495.000,00", numeroOS: "20318", contratos: "Ricardo", faturamentoMes: "12", prioridadeFaturamento: "2025-11-10", previsaoEntrega: "2025-12-01", previsaoFaturamento: "Dezembro", dataAnalise: "2025-08-26", status: "OK", concluido: false },
             { id: generateId(), proposta: "33493-1", cliente: "ABB", valor: "R$ 4.985,28", numeroOS: "20131", contratos: "RICARDO", faturamentoMes: "12", prioridadeFaturamento: "2025-09-29", previsaoEntrega: "2025-09-29", previsaoFaturamento: "Dezembro", dataAnalise: "2025-10-14", status: "OK", concluido: false },
             { id: generateId(), proposta: "32637", cliente: "VOTORANTIM CIMENTOS S.A.", valor: "R$ 347.061,91", numeroOS: "18129", contratos: "RICARDO", faturamentoMes: "12", prioridadeFaturamento: "2025-04-26", previsaoEntrega: "2025-06-01", previsaoFaturamento: "Dezembro", dataAnalise: "", status: "OK", concluido: false },
-            { id: generateId(), proposta: "32304", cliente: "BRASKEM S/A", valor: "R$ 342.068,46", numeroOS: "17874", contratos: "RICARDO", faturamentoMes: "12", prioridadeFaturamento: "2025-10-10", previsaoEntrega: "2025-07-01", previsaoFaturamento: "Dezembro", dataAnalise: "", status: "OK", concluido: false },
+            { id: generateId(), proposta: "32304", cliente: "BRASKEM S/A", valor: "R$ 342.068,46", numeroOS: "17874", contratos: "RICARDO", faturamentoMes: "12", prioridadeFaturamento: "2025-06-10", previsaoEntrega: "2025-07-01", previsaoFaturamento: "Dezembro", dataAnalise: "", status: "OK", concluido: false },
             { id: generateId(), proposta: "32302", cliente: "BRIDGESTONE", valor: "R$ 695.000,00", numeroOS: "17780", contratos: "RICARDO", faturamentoMes: "12", prioridadeFaturamento: "2025-04-26", previsaoEntrega: "2025-10-10", previsaoFaturamento: "Dezembro", dataAnalise: "2025-08-22", status: "OK", concluido: false },
             { id: generateId(), proposta: "31764", cliente: "White Martins", valor: "R$ 125.643,00", numeroOS: "20896", contratos: "Ricardo", faturamentoMes: "12", prioridadeFaturamento: "2025-07-20", previsaoEntrega: "2025-11-25", previsaoFaturamento: "Dezembro", dataAnalise: "2025-07-28", status: "ok", concluido: false },
             { id: generateId(), proposta: "32664", cliente: "VOTORANTIM CIMENTOS S.A.", valor: "R$ 1.194.175,00", numeroOS: "18218", contratos: "RICARDO", faturamentoMes: "12", prioridadeFaturamento: "2025-08-20", previsaoEntrega: "2025-11-05", previsaoFaturamento: "DEZEMBRO", dataAnalise: "2025-10-14", status: "PENDENTE DE PEDIDO", concluido: false },
             { id: generateId(), proposta: "35329", cliente: "Sabesp", valor: "R$ 6.950,00", numeroOS: "21197", contratos: "RICARDO", faturamentoMes: "12", prioridadeFaturamento: "2025-10-15", previsaoEntrega: "2025-10-15", previsaoFaturamento: "Dezembro", dataAnalise: "2025-10-14", status: "PENDENTE DE PEDIDO", concluido: false },
-            { id: generateId(), proposta: "34402-1", cliente: "White Martins", valor: "R$ 59.944,00", numeroOS: "20853", contratos: "RICARDO", faturamentoMes: "12", prioridadeFaturamento: "2025-10-13", previsaoEntrega: "2025-11-10", previsaoFaturamento: "Dezembro", dataAnalise: "2025-10-14", status: "PENDENTE DE PEDIDO", concluido: false },
+            { id: generateId(), proposta: "34402-1", cliente: "White Martins", valor: "R$ 59.944,00", numeroOS: "20853", contratos: "RICARDO", faturamentoMes: "12", prioridadeFaturamento: "2025-10-13", previsaoEntrega: "2025-10-11", previsaoFaturamento: "Dezembro", dataAnalise: "2025-10-14", status: "PENDENTE DE PEDIDO", concluido: false },
             { id: generateId(), proposta: "33574", cliente: "Suzano", valor: "R$ 132.895,00", numeroOS: "20253", contratos: "Ricardo", faturamentoMes: "12", prioridadeFaturamento: "2025-10-05", previsaoEntrega: "2025-10-26", previsaoFaturamento: "Dezembro", dataAnalise: "2025-10-14", status: "PENDENTE DE PEDIDO", concluido: false }
         ];
 
@@ -675,27 +672,36 @@
         let itensPendentes = [];
         let itensConcluidos = [];
 
-        // Gerar ID único
-        function generateId() {
-            return 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        }
-
-        // Inicializar dados
         function inicializarDados() {
-            const dadosSalvos = localStorage.getItem('faturamento_itens');
-            if (dadosSalvos) {
-                itens = JSON.parse(dadosSalvos);
-            } else {
-                // Primeira vez - carregar dados iniciais
-                itens = dadosIniciais;
-                salvarDados();
-            }
-            aplicarFiltros();
+            const faturamentoRef = ref(database, 'faturamento_itens');
+            onValue(faturamentoRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const dados = snapshot.val();
+                    itens = Object.keys(dados).map(key => ({ firebaseKey: key, ...dados[key] }));
+                } else {
+                    dadosIniciais.forEach(item => salvarItemFirebase(item));
+                    itens = [...dadosIniciais];
+                }
+                aplicarFiltros();
+            });
         }
 
-        // Salvar dados no localStorage
-        function salvarDados() {
-            localStorage.setItem('faturamento_itens', JSON.stringify(itens));
+        async function salvarItemFirebase(item) {
+            const faturamentoRef = ref(database, 'faturamento_itens');
+            const itemSemFirebaseKey = {...item};
+            delete itemSemFirebaseKey.firebaseKey;
+            
+            if (item.firebaseKey) {
+                const itemRef = ref(database, `faturamento_itens/${item.firebaseKey}`);
+                await set(itemRef, itemSemFirebaseKey);
+            } else {
+                await push(faturamentoRef, itemSemFirebaseKey);
+            }
+        }
+
+        async function deletarItemFirebase(firebaseKey) {
+            const itemRef = ref(database, `faturamento_itens/${firebaseKey}`);
+            await remove(itemRef);
         }
 
         function aplicarFiltros() {
@@ -712,26 +718,14 @@
         function renderizarTabelaPendentes() {
             const tbody = document.getElementById('tabelaPendentes');
             const counter = document.getElementById('counterPendentes');
-            
             counter.textContent = `${itensPendentes.length} ${itensPendentes.length === 1 ? 'item pendente' : 'itens pendentes'}`;
-            
             if (itensPendentes.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="13" class="empty-state">
-                            <h3>Nenhum item pendente</h3>
-                            <p>Todos os itens foram concluídos!</p>
-                        </td>
-                    </tr>
-                `;
+                tbody.innerHTML = `<tr><td colspan="13" class="empty-state"><h3>Nenhum item pendente</h3><p>Todos os itens foram concluídos!</p></td></tr>`;
                 return;
             }
-            
             tbody.innerHTML = itensPendentes.map(item => `
                 <tr>
-                    <td class="checkbox-col">
-                        <input type="checkbox" onchange="concluirItem('${item.id}')" title="Marcar como concluído">
-                    </td>
+                    <td class="checkbox-col"><input type="checkbox" onchange="concluirItem('${item.id}')" title="Marcar como concluído"></td>
                     <td>${item.proposta}</td>
                     <td>${item.cliente}</td>
                     <td>${item.valor}</td>
@@ -745,7 +739,7 @@
                     <td><span class="status-badge ${getStatusClass(item.status)}">${item.status}</span></td>
                     <td class="actions-col">
                         <button class="btn-small btn-edit" onclick="abrirModalEdicao('${item.id}')">✏️</button>
-                        <button class="btn-small btn-delete" onclick="deletarItem('${item.id}')">🗑️</button>
+                        <button class="btn-small btn-delete" onclick="deletarItem('${item.firebaseKey || item.id}')">🗑️</button>
                     </td>
                 </tr>
             `).join('');
@@ -754,26 +748,14 @@
         function renderizarTabelaConcluidos() {
             const tbody = document.getElementById('tabelaConcluidos');
             const counter = document.getElementById('counterConcluidos');
-            
             counter.textContent = `${itensConcluidos.length} ${itensConcluidos.length === 1 ? 'item concluído' : 'itens concluídos'}`;
-            
             if (itensConcluidos.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="13" class="empty-state">
-                            <h3>Nenhum item concluído</h3>
-                            <p>Marque itens como concluídos para vê-los aqui</p>
-                        </td>
-                    </tr>
-                `;
+                tbody.innerHTML = `<tr><td colspan="13" class="empty-state"><h3>Nenhum item concluído</h3><p>Marque itens como concluídos para vê-los aqui</p></td></tr>`;
                 return;
             }
-            
             tbody.innerHTML = itensConcluidos.map(item => `
                 <tr>
-                    <td class="checkbox-col">
-                        <input type="checkbox" checked onchange="reabrirItem('${item.id}')" title="Reabrir item">
-                    </td>
+                    <td class="checkbox-col"><input type="checkbox" checked onchange="reabrirItem('${item.id}')" title="Reabrir item"></td>
                     <td>${item.proposta}</td>
                     <td>${item.cliente}</td>
                     <td>${item.valor}</td>
@@ -787,15 +769,14 @@
                     <td><span class="status-badge ${getStatusClass(item.status)}">${item.status}</span></td>
                     <td class="actions-col">
                         <button class="btn-small btn-edit" onclick="abrirModalEdicao('${item.id}')">✏️</button>
-                        <button class="btn-small btn-delete" onclick="deletarItem('${item.id}')">🗑️</button>
+                        <button class="btn-small btn-delete" onclick="deletarItem('${item.firebaseKey || item.id}')">🗑️</button>
                     </td>
                 </tr>
             `).join('');
         }
 
         function getStatusClass(status) {
-            const statusNormalizado = status.toLowerCase().replace(/\s+/g, '-');
-            return statusNormalizado;
+            return status.toLowerCase().replace(/\s+/g, '-');
         }
 
         function formatarData(data) {
@@ -804,10 +785,9 @@
             return `${dia}/${mes}/${ano}`;
         }
 
-        function switchTab(tab) {
+        window.switchTab = function(tab) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
             if (tab === 'pendentes') {
                 document.querySelector('.tab-btn:first-child').classList.add('active');
                 document.getElementById('tab-pendentes').classList.add('active');
@@ -815,19 +795,18 @@
                 document.querySelector('.tab-btn:last-child').classList.add('active');
                 document.getElementById('tab-concluidos').classList.add('active');
             }
-        }
+        };
 
-        function abrirModal() {
+        window.abrirModal = function() {
             document.getElementById('modalTitle').textContent = '➕ Adicionar Item';
             document.getElementById('formItem').reset();
             document.getElementById('editId').value = '';
             document.getElementById('modal').classList.add('show');
-        }
+        };
 
-        function abrirModalEdicao(id) {
+        window.abrirModalEdicao = function(id) {
             const item = itens.find(i => i.id === id);
             if (!item) return;
-            
             document.getElementById('modalTitle').textContent = '✏️ Editar Item';
             document.getElementById('editId').value = id;
             document.getElementById('proposta').value = item.proposta;
@@ -841,18 +820,16 @@
             document.getElementById('previsaoFaturamento').value = item.previsaoFaturamento;
             document.getElementById('dataAnalise').value = item.dataAnalise || '';
             document.getElementById('status').value = item.status;
-            
             document.getElementById('modal').classList.add('show');
-        }
+        };
 
-        function fecharModal() {
+        window.fecharModal = function() {
             document.getElementById('modal').classList.remove('show');
             document.getElementById('formItem').reset();
-        }
+        };
 
-        document.getElementById('formItem').addEventListener('submit', function(e) {
+        document.getElementById('formItem').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
             const id = document.getElementById('editId').value;
             const dados = {
                 proposta: document.getElementById('proposta').value,
@@ -868,87 +845,51 @@
                 status: document.getElementById('status').value,
                 concluido: false
             };
-            
             if (id) {
-                // Editar
-                const index = itens.findIndex(i => i.id === id);
-                if (index !== -1) {
-                    itens[index] = { ...itens[index], ...dados };
-                }
-                mostrarNotificacao('✅ Item atualizado com sucesso!');
+                const item = itens.find(i => i.id === id);
+                await salvarItemFirebase({ ...item, ...dados });
+                mostrarNotificacao('✅ Item atualizado!');
             } else {
-                // Adicionar
-                itens.push({
-                    id: generateId(),
-                    ...dados
-                });
-                mostrarNotificacao('✅ Item adicionado com sucesso!');
+                await salvarItemFirebase({ id: generateId(), ...dados });
+                mostrarNotificacao('✅ Item adicionado!');
             }
-            
-            salvarDados();
-            aplicarFiltros();
             fecharModal();
         });
 
-        function concluirItem(id) {
-            const index = itens.findIndex(i => i.id === id);
-            if (index !== -1) {
-                itens[index].concluido = true;
-                salvarDados();
-                aplicarFiltros();
-                mostrarNotificacao('✅ Item marcado como concluído!');
+        window.concluirItem = async function(id) {
+            const item = itens.find(i => i.id === id);
+            if (item) {
+                item.concluido = true;
+                await salvarItemFirebase(item);
+                mostrarNotificacao('✅ Item concluído!');
                 switchTab('concluidos');
             }
-        }
+        };
 
-        function reabrirItem(id) {
-            const index = itens.findIndex(i => i.id === id);
-            if (index !== -1) {
-                itens[index].concluido = false;
-                salvarDados();
-                aplicarFiltros();
-                mostrarNotificacao('🔄 Item reaberto!');
+        window.reabrirItem = async function(id) {
+            const item = itens.find(i => i.id === id);
+            if (item) {
+                item.concluido = false;
+                await salvarItemFirebase(item);
+                mostrarNotificacao('↩️ Item reaberto!');
                 switchTab('pendentes');
             }
-        }
+        };
 
-        function deletarItem(id) {
-            if (!confirm('Tem certeza que deseja deletar este item? Esta ação não pode ser desfeita.')) {
-                return;
-            }
-            
-            const index = itens.findIndex(i => i.id === id);
-            if (index !== -1) {
-                itens.splice(index, 1);
-                salvarDados();
-                aplicarFiltros();
-                mostrarNotificacao('🗑️ Item deletado com sucesso!');
-            }
-        }
+        window.deletarItem = async function(key) {
+            if (!confirm('Tem certeza que deseja deletar?')) return;
+            await deletarItemFirebase(key);
+            mostrarNotificacao('🗑️ Item deletado!');
+        };
 
-        function exportarExcel() {
+        window.exportarExcel = function() {
             try {
                 if (itens.length === 0) {
-                    mostrarNotificacao('❌ Nenhum item para exportar', 'error');
+                    mostrarNotificacao('Nenhum item para exportar', 'error');
                     return;
                 }
-
                 const dados = [];
-                dados.push([
-                    'PROPOSTA',
-                    'NOME DO CLIENTE',
-                    'VALOR LIQUIDO FORNECEDOR',
-                    'NRO. OS',
-                    'M. DE CONTRATOS',
-                    'FATURAMENTO (MÊS/ANO)',
-                    'PRIORIDADE DE FATURAMENTO',
-                    'PREVISÃO DE ENTREGA EQUIPAMENTO',
-                    'PREVISÃO DE FATURAMENTO (ADM)',
-                    'DATA ANÁLISE DA PENDÊNCIA OU',
-                    'STATUS DO PEDIDO (SUPORTE)',
-                    'STATUS'
-                ]);
-
+                dados.push(['PROPOSTA', 'CLIENTE', 'VALOR', 'NRO. OS', 'CONTRATOS', 'FATURAMENTO', 'PRIORIDADE', 'PREVISÃO ENTREGA', 'PREVISÃO FATURAMENTO', 'DATA ANÁLISE', 'STATUS', 'SITUAÇÃO']);
                 itens.forEach(item => {
                     dados.push([
                         item.proposta,
@@ -965,66 +906,38 @@
                         item.concluido ? 'Concluído' : 'Pendente'
                     ]);
                 });
-
                 const ws = XLSX.utils.aoa_to_sheet(dados);
-                ws['!cols'] = [
-                    { wch: 12 }, { wch: 30 }, { wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 18 },
-                    { wch: 25 }, { wch: 30 }, { wch: 28 }, { wch: 28 }, { wch: 25 }, { wch: 12 }
-                ];
-
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, 'Faturamento');
-
                 const dataAtual = new Date();
                 const nomeArquivo = `Faturamento_${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}-${String(dataAtual.getDate()).padStart(2, '0')}.xlsx`;
-
                 XLSX.writeFile(wb, nomeArquivo);
-                mostrarNotificacao('✅ Excel exportado com sucesso!');
-
+                mostrarNotificacao('Excel exportado!');
             } catch (error) {
-                console.error('Erro ao exportar:', error);
-                mostrarNotificacao('❌ Erro ao exportar Excel', 'error');
+                console.error('Erro:', error);
+                mostrarNotificacao('Erro ao exportar', 'error');
             }
-        }
+        };
 
         function mostrarNotificacao(mensagem, tipo = 'success') {
             const cores = {
                 success: 'linear-gradient(135deg, #667eea, #764ba2)',
-                error: 'linear-gradient(135deg, #eb3349, #f45c43)',
-                info: 'linear-gradient(135deg, #4facfe, #00f2fe)'
+                error: 'linear-gradient(135deg, #eb3349, #f45c43)'
             };
-            
             const notificacao = document.createElement('div');
-            notificacao.style.cssText = `
-                position: fixed;
-                top: 24px;
-                right: 24px;
-                padding: 18px 28px;
-                border-radius: 12px;
-                font-weight: 800;
-                max-width: 400px;
-                z-index: 10000;
-                box-shadow: 0 12px 35px rgba(0,0,0,0.3);
-                background: ${cores[tipo]};
-                color: white;
-                animation: slideInRight 0.4s ease;
-                font-size: 14px;
-            `;
+            notificacao.style.cssText = `position: fixed; top: 24px; right: 24px; padding: 18px 28px; border-radius: 12px; font-weight: 800; max-width: 400px; z-index: 10000; box-shadow: 0 12px 35px rgba(0,0,0,0.3); background: ${cores[tipo]}; color: white; font-size: 14px;`;
             notificacao.textContent = mensagem;
             document.body.appendChild(notificacao);
-
             setTimeout(() => notificacao.remove(), 4000);
         }
 
-        // Fechar modal ao clicar fora
         window.onclick = function(event) {
             const modal = document.getElementById('modal');
             if (event.target === modal) {
                 fecharModal();
             }
-        }
+        };
 
-        // Inicializar ao carregar
         inicializarDados();
     </script>
 </body>
