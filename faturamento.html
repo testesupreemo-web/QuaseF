@@ -396,6 +396,7 @@
             border-bottom: 1px solid #f1f5f9;
             transition: all 0.2s;
             position: relative;
+            cursor: pointer;
         }
 
         tbody tr:hover {
@@ -405,6 +406,36 @@
         td {
             padding: 16px 12px;
             color: #2d3748;
+        }
+
+        /* Badges de preview */
+        .preview-badges {
+            display: inline-flex;
+            gap: 6px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .preview-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .preview-badge.material {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .preview-badge.op {
+            background: #f3e5f5;
+            color: #7b1fa2;
         }
 
         .action-col {
@@ -622,6 +653,11 @@
             animation: slideUp 0.3s;
         }
 
+        /* Modal de Detalhes da Proposta */
+        .modal-content.small {
+            max-width: 500px;
+        }
+
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
@@ -706,6 +742,46 @@
             color: #dc3545;
         }
 
+        /* Checkbox customizado */
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            background: #f8fafc;
+            border-radius: 10px;
+            transition: all 0.2s;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-item:hover {
+            background: #e2e8f0;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #2196f3;
+        }
+
+        .checkbox-item label {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2d3748;
+            cursor: pointer;
+            flex: 1;
+            margin: 0;
+        }
+
         /* Modal de Confirmação */
         .confirm-modal {
             display: none;
@@ -786,6 +862,7 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
+
         .back-btn {
             display: inline-block;
             background: #000;
@@ -1087,6 +1164,30 @@
         </div>
     </div>
 
+    <!-- Modal Detalhes da Proposta -->
+    <div id="modalDetalhes" class="modal">
+        <div class="modal-content small">
+            <div class="modal-header">
+                <h2 id="modalDetalhesTitulo">Detalhes da Proposta</h2>
+                <button class="close-modal" onclick="fecharModalDetalhes()">×</button>
+            </div>
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="temMaterial">
+                    <label for="temMaterial">📦 Tem material</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="temOP">
+                    <label for="temOP">📋 Tem OP</label>
+                </div>
+            </div>
+            <div class="action-buttons" style="margin-top: 24px;">
+                <button class="btn btn-primary" onclick="salvarDetalhes()">Salvar</button>
+                <button class="btn btn-secondary" onclick="fecharModalDetalhes()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de Confirmação de Exclusão -->
     <div id="confirmModal" class="confirm-modal">
         <div class="confirm-content">
@@ -1151,6 +1252,7 @@
         let itensConcluidos = [];
         let itemParaDeletar = null;
         let itensFiltrados = [];
+        let itemAtualDetalhes = null;
 
         function inicializarDados() {
             const faturamentoRef = ref(database, 'faturamento_itens');
@@ -1265,6 +1367,46 @@
             renderizarTabelaConcluidos();
         }
 
+        // Função para gerar badges de preview
+        function gerarPreviewBadges(item) {
+            let badges = '';
+            if (item.temMaterial) {
+                badges += '<span class="preview-badge material">📦 Material</span>';
+            }
+            if (item.temOP) {
+                badges += '<span class="preview-badge op">📋 OP</span>';
+            }
+            return badges ? `<div class="preview-badges">${badges}</div>` : '';
+        }
+
+        // Função para abrir modal de detalhes
+        window.abrirModalDetalhes = function(id, firebaseKey) {
+            const item = itens.find(i => i.id === id);
+            if (!item) return;
+            
+            itemAtualDetalhes = item;
+            document.getElementById('modalDetalhesTitulo').textContent = `Proposta ${item.proposta}`;
+            document.getElementById('temMaterial').checked = item.temMaterial || false;
+            document.getElementById('temOP').checked = item.temOP || false;
+            document.getElementById('modalDetalhes').classList.add('show');
+        };
+
+        window.fecharModalDetalhes = function() {
+            document.getElementById('modalDetalhes').classList.remove('show');
+            itemAtualDetalhes = null;
+        };
+
+        window.salvarDetalhes = async function() {
+            if (!itemAtualDetalhes) return;
+            
+            itemAtualDetalhes.temMaterial = document.getElementById('temMaterial').checked;
+            itemAtualDetalhes.temOP = document.getElementById('temOP').checked;
+            
+            await salvarItemFirebase(itemAtualDetalhes);
+            mostrarNotificacao('✓ Detalhes salvos com sucesso!', 'success');
+            fecharModalDetalhes();
+        };
+
         function renderizarTabelaPendentes() {
             const tbody = document.getElementById('tabelaPendentes');
             
@@ -1274,8 +1416,11 @@
             }
             
             tbody.innerHTML = itensFiltrados.map(item => `
-                <tr>
-                    <td><strong>${item.proposta}</strong></td>
+                <tr onclick="handleRowClick(event, '${item.id}', '${item.firebaseKey}')">
+                    <td>
+                        <strong>${item.proposta}</strong>
+                        ${gerarPreviewBadges(item)}
+                    </td>
                     <td>${item.cliente}</td>
                     <td><strong>${item.valor}</strong></td>
                     <td>${item.numeroOS}</td>
@@ -1283,18 +1428,18 @@
                     <td>${item.dataAnalise ? formatarData(item.dataAnalise) : '-'}</td>
                     <td><span class="status-badge ${getStatusClass(item.status)}">${item.status}</span></td>
                     <td class="action-col">
-                        <button class="btn-concluir" onclick="concluirItem('${item.id}', '${item.firebaseKey}')">
+                        <button class="btn-concluir" onclick="event.stopPropagation(); concluirItem('${item.id}', '${item.firebaseKey}')">
                             ✓ Concluir
                         </button>
                     </td>
                     <td class="actions-col">
                         <div class="actions-menu">
-                            <button class="btn-actions" onclick="toggleMenu(event, 'pend-${item.firebaseKey}')">⋯</button>
+                            <button class="btn-actions" onclick="event.stopPropagation(); toggleMenu(event, 'pend-${item.firebaseKey}')">⋯</button>
                             <div class="actions-dropdown" id="menu-pend-${item.firebaseKey}">
-                                <button onclick="abrirModalEdicao('${item.id}', '${item.firebaseKey}'); fecharMenus();">
+                                <button onclick="event.stopPropagation(); abrirModalEdicao('${item.id}', '${item.firebaseKey}'); fecharMenus();">
                                     ✏️ Editar
                                 </button>
-                                <button class="delete" onclick="abrirConfirmacao('${item.firebaseKey}'); fecharMenus();">
+                                <button class="delete" onclick="event.stopPropagation(); abrirConfirmacao('${item.firebaseKey}'); fecharMenus();">
                                     🗑️ Excluir
                                 </button>
                             </div>
@@ -1313,8 +1458,11 @@
             }
             
             tbody.innerHTML = itensConcluidos.map(item => `
-                <tr>
-                    <td><strong>${item.proposta}</strong></td>
+                <tr onclick="handleRowClick(event, '${item.id}', '${item.firebaseKey}')">
+                    <td>
+                        <strong>${item.proposta}</strong>
+                        ${gerarPreviewBadges(item)}
+                    </td>
                     <td>${item.cliente}</td>
                     <td><strong>${item.valor}</strong></td>
                     <td>${item.numeroOS}</td>
@@ -1322,18 +1470,18 @@
                     <td>${item.dataAnalise ? formatarData(item.dataAnalise) : '-'}</td>
                     <td><span class="status-badge ${getStatusClass(item.status)}">${item.status}</span></td>
                     <td class="action-col">
-                        <button class="btn-reabrir" onclick="reabrirItem('${item.id}', '${item.firebaseKey}')">
+                        <button class="btn-reabrir" onclick="event.stopPropagation(); reabrirItem('${item.id}', '${item.firebaseKey}')">
                             ↩ Reabrir
                         </button>
                     </td>
                     <td class="actions-col">
                         <div class="actions-menu">
-                            <button class="btn-actions" onclick="toggleMenu(event, 'conc-${item.firebaseKey}')">⋯</button>
+                            <button class="btn-actions" onclick="event.stopPropagation(); toggleMenu(event, 'conc-${item.firebaseKey}')">⋯</button>
                             <div class="actions-dropdown" id="menu-conc-${item.firebaseKey}">
-                                <button onclick="abrirModalEdicao('${item.id}', '${item.firebaseKey}'); fecharMenus();">
+                                <button onclick="event.stopPropagation(); abrirModalEdicao('${item.id}', '${item.firebaseKey}'); fecharMenus();">
                                     ✏️ Editar
                                 </button>
-                                <button class="delete" onclick="abrirConfirmacao('${item.firebaseKey}'); fecharMenus();">
+                                <button class="delete" onclick="event.stopPropagation(); abrirConfirmacao('${item.firebaseKey}'); fecharMenus();">
                                     🗑️ Excluir
                                 </button>
                             </div>
@@ -1342,6 +1490,15 @@
                 </tr>
             `).join('');
         }
+
+        // Função para lidar com clique na linha
+        window.handleRowClick = function(event, id, firebaseKey) {
+            // Verifica se o clique não foi em um botão ou menu
+            if (event.target.closest('button') || event.target.closest('.actions-menu')) {
+                return;
+            }
+            abrirModalDetalhes(id, firebaseKey);
+        };
 
         function getStatusClass(status) {
             return status.toLowerCase().replace(/\s+/g, '-');
@@ -1464,11 +1621,15 @@
                 dados.id = id;
                 dados.firebaseKey = firebaseKey || item.firebaseKey;
                 dados.dataCriacao = item.dataCriacao || new Date().toISOString();
+                dados.temMaterial = item.temMaterial || false;
+                dados.temOP = item.temOP || false;
                 await salvarItemFirebase(dados);
                 mostrarNotificacao('✓ Item atualizado com sucesso!', 'success');
             } else {
                 dados.id = generateId();
                 dados.dataCriacao = new Date().toISOString();
+                dados.temMaterial = false;
+                dados.temOP = false;
                 await salvarItemFirebase(dados);
                 mostrarNotificacao('✓ Item adicionado com sucesso!', 'success');
             }
@@ -1506,7 +1667,7 @@
                 }
                 
                 const dados = [];
-                dados.push(['PROPOSTA', 'CLIENTE', 'VALOR', 'NRO. OS', 'FATURAMENTO', 'DATA ANÁLISE', 'STATUS', 'SITUAÇÃO']);
+                dados.push(['PROPOSTA', 'CLIENTE', 'VALOR', 'NRO. OS', 'FATURAMENTO', 'DATA ANÁLISE', 'STATUS', 'SITUAÇÃO', 'TEM MATERIAL', 'TEM OP']);
                 
                 itens.forEach(item => {
                     dados.push([
@@ -1517,7 +1678,9 @@
                         item.faturamentoMes,
                         item.dataAnalise ? formatarData(item.dataAnalise) : '-',
                         item.status,
-                        item.concluido ? 'Concluído' : 'Pendente'
+                        item.concluido ? 'Concluído' : 'Pendente',
+                        item.temMaterial ? 'Sim' : 'Não',
+                        item.temOP ? 'Sim' : 'Não'
                     ]);
                 });
                 
@@ -1571,6 +1734,11 @@
             const modal = document.getElementById('modal');
             if (event.target === modal) {
                 fecharModal();
+            }
+            
+            const modalDetalhes = document.getElementById('modalDetalhes');
+            if (event.target === modalDetalhes) {
+                fecharModalDetalhes();
             }
             
             const confirmModal = document.getElementById('confirmModal');
