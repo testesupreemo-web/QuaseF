@@ -25,6 +25,7 @@
         window.firebaseDB = database;
         window.firebaseRef = ref;
         window.firebaseOnValue = onValue;
+        window.firebaseLoaded = true;
     </script>
     
     <style>
@@ -113,6 +114,31 @@
             color: #777;
             font-weight: 400;
             margin-top: 10px;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(255, 68, 68, 0.3);
+            z-index: 100;
+        }
+
+        .logout-btn:hover {
+            background: #cc0000;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 68, 68, 0.4);
         }
 
         .tabs-wrapper {
@@ -290,33 +316,6 @@
             background: #222;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 60px 40px;
-            background: #f9f9f9;
-            border-radius: 20px;
-            border: 2px dashed #ddd;
-        }
-
-        .empty-icon {
-            font-size: 80px;
-            margin-bottom: 20px;
-            opacity: 0.6;
-        }
-
-        .empty-title {
-            font-size: 1.8em;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .empty-text {
-            color: #777;
-            font-size: 1em;
-            line-height: 1.6;
-        }
-
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -357,7 +356,6 @@
             border-top: 1px solid #e0e0e0;
         }
 
-        /* Modal Login */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -542,14 +540,16 @@
             .icon { font-size: 50px; }
             .login-modal { padding: 40px 30px; }
             .login-title { font-size: 1.6em; }
+            .logout-btn { top: 10px; right: 10px; padding: 10px 20px; font-size: 12px; }
         }
     </style>
 </head>
 <body>
-    <!-- Modal de Login -->
-    <div class="modal-overlay" id="loginModal">
+    <button class="logout-btn" onclick="fazerLogout()" style="display: none;" id="logoutBtn">🚪 Sair</button>
+
+    <div class="modal-overlay active" id="loginModal">
         <div class="login-modal">
-            <button class="login-close" onclick="fecharLogin()">✕</button>
+            <button class="login-close" onclick="fecharLogin()" style="display: none;">✕</button>
             <div class="login-header">
                 <div class="login-icon">🔐</div>
                 <h2 class="login-title">Acesso Restrito</h2>
@@ -570,7 +570,7 @@
         </div>
     </div>
 
-    <div class="container">
+    <div class="container" id="mainContent" style="display: none;">
         <div class="header">
             <div class="logo">🚀 Bem-vindo</div>
             <h1>Super Controle</h1>
@@ -603,56 +603,56 @@
                 </div>
 
                 <div class="content-grid">
-                    <div class="feature-card link" onclick="abrirLogin()" style="cursor:pointer;">
+                    <div class="feature-card link" onclick="irParaPendencias()">
                         <span class="icon">📋</span>
                         <h3 class="feature-title">Gerenciador de Pendências</h3>
                         <p class="feature-description">Controle completo de ordens de serviço, prazos e responsáveis com interface intuitiva.</p>
                         <span class="feature-status active">Ativo</span>
-                        <button class="btn-access" type="button" onclick="event.stopPropagation(); abrirLogin();">Acessar Sistema</button>
+                        <button class="btn-access" type="button" onclick="event.stopPropagation(); irParaPendencias();">Acessar Sistema</button>
                     </div>
 
-                    <div class="feature-card link" onclick="window.location.href='analise-pendencias.html';" style="cursor:pointer;">
+                    <div class="feature-card link" onclick="irParaAnalisePendencias()">
                         <span class="icon">📈</span>
                         <h3 class="feature-title">Análise de Pendências</h3>
                         <p class="feature-description">Visualize gráficos, tendências e métricas de suas pendências em tempo real.</p>
                         <span class="feature-status active">Ativo</span>
-                        <button class="btn-access" type="button" onclick="event.stopPropagation(); window.location.href='./analise-pendencias.html';">Acessar Sistema</button>
+                        <button class="btn-access" type="button" onclick="event.stopPropagation(); irParaAnalisePendencias();">Acessar Sistema</button>
                     </div>
                 </div>
             </div>
 
             <div id="faturamento-tab" class="tab-content">
                 <div class="content-grid" style="grid-template-columns: 1fr; max-width: 500px;">
-                    <div class="feature-card link" onclick="window.location.href='faturamento.html';" style="cursor:pointer;">
+                    <div class="feature-card link" onclick="irParaFaturamento()">
                         <span class="icon">💰</span>
                         <h3 class="feature-title">Pendências Faturamento</h3>
                         <p class="feature-description">Sistema completo para gerenciar faturamento, faturas pendentes e análises financeiras.</p>
                         <span class="feature-status active">Ativo</span>
-                        <button class="btn-access" type="button" onclick="event.stopPropagation(); window.location.href='faturamento.html';">Acessar Sistema</button>
+                        <button class="btn-access" type="button" onclick="event.stopPropagation(); irParaFaturamento();">Acessar Sistema</button>
                     </div>
                 </div>
             </div>
 
             <div id="cronogramas-tab" class="tab-content">
                 <div class="content-grid" style="grid-template-columns: 1fr; max-width: 500px;">
-                    <div class="feature-card link" onclick="window.location.href='cronogramas.html';" style="cursor:pointer;">
+                    <div class="feature-card link" onclick="irParaCronogramas()">
                         <span class="icon">📅</span>
                         <h3 class="feature-title">Gerenciador de Cronogramas</h3>
                         <p class="feature-description">Sistema completo para planejamento de projetos, visualização de cronogramas e controle de prazos.</p>
                         <span class="feature-status active">Ativo</span>
-                        <button class="btn-access" type="button" onclick="event.stopPropagation(); window.location.href='cronogramas.html';">Acessar Sistema</button>
+                        <button class="btn-access" type="button" onclick="event.stopPropagation(); irParaCronogramas();">Acessar Sistema</button>
                     </div>
                 </div>
             </div>
 
             <div id="compras-tab" class="tab-content">
                 <div class="content-grid" style="grid-template-columns: 1fr; max-width: 500px;">
-                    <div class="feature-card link" onclick="window.location.href='gerenciarcompras.html';" style="cursor:pointer;">
+                    <div class="feature-card link" onclick="irParaCompras()">
                         <span class="icon">🛒</span>
                         <h3 class="feature-title">Gerenciador de Compras</h3>
                         <p class="feature-description">Sistema completo para controle de compras, fornecedores, pedidos e estoque com rastreamento em tempo real.</p>
                         <span class="feature-status active">Ativo</span>
-                        <button class="btn-access" type="button" onclick="event.stopPropagation(); window.location.href='gerenciarcompras.html';">Acessar Sistema</button>
+                        <button class="btn-access" type="button" onclick="event.stopPropagation(); irParaCompras();">Acessar Sistema</button>
                     </div>
                 </div>
             </div>
@@ -664,17 +664,42 @@
     </div>
 
     <script>
-        // Sistema de Login
-        function abrirLogin() {
+        function verificarLogin() {
+            const isLoggedIn = localStorage.getItem('superControleLoggedIn');
+            const loginTime = localStorage.getItem('superControleLoginTime');
+            
+            if (isLoggedIn === 'true' && loginTime) {
+                const horasPassadas = (Date.now() - parseInt(loginTime)) / (1000 * 60 * 60);
+                if (horasPassadas < 8) {
+                    mostrarConteudo();
+                    return;
+                }
+            }
+            
+            mostrarLogin();
+        }
+
+        function mostrarLogin() {
             document.getElementById('loginModal').classList.add('active');
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'none';
             document.getElementById('loginError').classList.remove('active');
             document.getElementById('loginUsuario').value = '';
             document.getElementById('loginSenha').value = '';
-            document.getElementById('loginUsuario').focus();
+            setTimeout(() => {
+                document.getElementById('loginUsuario').focus();
+            }, 100);
+        }
+
+        function mostrarConteudo() {
+            document.getElementById('loginModal').classList.remove('active');
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('logoutBtn').style.display = 'block';
+            carregarDadosFirebase();
         }
 
         function fecharLogin() {
-            document.getElementById('loginModal').classList.remove('active');
+            return false;
         }
 
         function fazerLogin(event) {
@@ -683,48 +708,102 @@
             const usuario = document.getElementById('loginUsuario').value;
             const senha = document.getElementById('loginSenha').value;
             
-            // Credenciais
             if (usuario === 'Admin123' && senha === 'Admin321') {
-                // Login bem-sucedido
-                window.location.href = 'pendencias.html';
+                localStorage.setItem('superControleLoggedIn', 'true');
+                localStorage.setItem('superControleLoginTime', Date.now().toString());
+                localStorage.setItem('superControleUsuario', usuario);
+                
+                mostrarConteudo();
             } else {
-                // Login falhou
                 document.getElementById('loginError').classList.add('active');
                 document.getElementById('loginSenha').value = '';
                 document.getElementById('loginUsuario').focus();
             }
         }
 
-        // Fechar modal ao clicar fora
+        function fazerLogout() {
+            if (confirm('Deseja realmente sair do sistema?')) {
+                localStorage.removeItem('superControleLoggedIn');
+                localStorage.removeItem('superControleLoginTime');
+                localStorage.removeItem('superControleUsuario');
+                
+                mostrarLogin();
+            }
+        }
+
+        function irParaPendencias() {
+            if (localStorage.getItem('superControleLoggedIn') === 'true') {
+                window.location.href = 'pendencias.html';
+            }
+        }
+
+        function irParaAnalisePendencias() {
+            if (localStorage.getItem('superControleLoggedIn') === 'true') {
+                window.location.href = 'analise-pendencias.html';
+            }
+        }
+
+        function irParaFaturamento() {
+            if (localStorage.getItem('superControleLoggedIn') === 'true') {
+                window.location.href = 'faturamento.html';
+            }
+        }
+
+        function irParaCronogramas() {
+            if (localStorage.getItem('superControleLoggedIn') === 'true') {
+                window.location.href = 'cronogramas.html';
+            }
+        }
+
+        function irParaCompras() {
+            if (localStorage.getItem('superControleLoggedIn') === 'true') {
+                window.location.href = 'gerenciarcompras.html';
+            }
+        }
+
         document.getElementById('loginModal').addEventListener('click', function(e) {
             if (e.target === this) {
-                fecharLogin();
+                // Não permite fechar sem login
             }
         });
 
-        // Carregar dados em tempo real
         function carregarDadosFirebase() {
-            const pendenciasRef = window.firebaseRef(window.firebaseDB, 'pendencias');
-            window.firebaseOnValue(pendenciasRef, (snapshot) => {
-                const pendencias = [];
-                snapshot.forEach((child) => {
-                    pendencias.push({ id: child.key, ...child.val() });
-                });
+            // Aguarda o Firebase estar pronto
+            const tentarCarregar = setInterval(() => {
+                if (window.firebaseLoaded && window.firebaseDB && window.firebaseRef && window.firebaseOnValue) {
+                    clearInterval(tentarCarregar);
+                    
+                    try {
+                        const pendenciasRef = window.firebaseRef(window.firebaseDB, 'pendencias');
+                        window.firebaseOnValue(pendenciasRef, (snapshot) => {
+                            const pendencias = [];
+                            snapshot.forEach((child) => {
+                                pendencias.push({ id: child.key, ...child.val() });
+                            });
 
-                const hoje = new Date();
-                hoje.setHours(0, 0, 0, 0);
+                            const hoje = new Date();
+                            hoje.setHours(0, 0, 0, 0);
 
-                const ativas = pendencias.filter(p => p.status === 'pendente');
-                const atrasadas = ativas.filter(p => new Date(p.dataPrazo + 'T00:00:00') < hoje);
-                const concluidas = pendencias.filter(p => p.status === 'concluida');
+                            const ativas = pendencias.filter(p => p.status === 'pendente');
+                            const atrasadas = ativas.filter(p => new Date(p.dataPrazo + 'T00:00:00') < hoje);
+                            const concluidas = pendencias.filter(p => p.status === 'concluida');
 
-                document.getElementById('stat-ativas').textContent = ativas.length;
-                document.getElementById('stat-atrasadas').textContent = atrasadas.length;
-                document.getElementById('stat-concluidas').textContent = concluidas.length;
-            });
+                            document.getElementById('stat-ativas').textContent = ativas.length;
+                            document.getElementById('stat-atrasadas').textContent = atrasadas.length;
+                            document.getElementById('stat-concluidas').textContent = concluidas.length;
+                        });
+                    } catch (error) {
+                        console.error('Erro ao carregar dados:', error);
+                    }
+                }
+            }, 100);
+            
+            // Timeout de 5 segundos
+            setTimeout(() => {
+                clearInterval(tentarCarregar);
+            }, 5000);
         }
 
-        // Tabs
         (function() {
             const btnPendencias = document.getElementById('btn-pendencias');
             const btnFaturamento = document.getElementById('btn-faturamento');
@@ -769,8 +848,7 @@
             });
         })();
 
-        // Carrega dados ao iniciar
-        setTimeout(() => carregarDadosFirebase(), 1000);
+        verificarLogin();
     </script>
 </body>
 </html>

@@ -1302,6 +1302,103 @@
     </style>
 </head>
 <body>
+    <!-- PROTEÇÃO DE ACESSO - INÍCIO -->
+<script>
+(function() {
+    function verificarAutenticacao() {
+        const isLoggedIn = localStorage.getItem('superControleLoggedIn');
+        const loginTime = localStorage.getItem('superControleLoginTime');
+        
+        if (isLoggedIn !== 'true' || !loginTime) {
+            alert('⚠️ Acesso negado! Você precisa fazer login primeiro.');
+            window.location.href = 'index.html';
+            return false;
+        }
+        
+        const horasPassadas = (Date.now() - parseInt(loginTime)) / (1000 * 60 * 60);
+        if (horasPassadas >= 8) {
+            localStorage.removeItem('superControleLoggedIn');
+            localStorage.removeItem('superControleLoginTime');
+            localStorage.removeItem('superControleUsuario');
+            alert('⏰ Sua sessão expirou. Por favor, faça login novamente.');
+            window.location.href = 'index.html';
+            return false;
+        }
+        
+        return true;
+    }
+    
+    if (!verificarAutenticacao()) {
+        document.write('<style>body{display:none !important;visibility:hidden !important;}</style>');
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.innerHTML = '';
+        });
+    }
+})();
+</script>
+
+<div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 999999; display: none; justify-content: center; align-items: center; color: white; font-family: Arial; text-align: center; padding: 20px;" id="bloqueioAcesso">
+    <div style="background: white; color: #333; padding: 40px; border-radius: 20px; max-width: 400px;">
+        <div style="font-size: 60px; margin-bottom: 20px;">🔒</div>
+        <h2 style="margin: 0 0 15px 0; font-size: 24px;">Acesso Negado</h2>
+        <p style="margin: 0 0 25px 0; color: #666;">Você precisa estar logado para acessar esta página.</p>
+        <button onclick="window.location.href='index.html'" style="background: #000; color: white; border: none; padding: 15px 30px; border-radius: 50px; font-size: 16px; font-weight: 600; cursor: pointer;">
+            Ir para Login
+        </button>
+    </div>
+</div>
+
+<button onclick="fazerLogout()" style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: #ff4444; color: white; border: none; padding: 12px 25px; border-radius: 50px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 5px 15px rgba(255,68,68,0.3); transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px;">
+    🚪 Sair
+</button>
+
+<script>
+function fazerLogout() {
+    if (confirm('Deseja realmente sair do sistema?')) {
+        localStorage.removeItem('superControleLoggedIn');
+        localStorage.removeItem('superControleLoginTime');
+        localStorage.removeItem('superControleUsuario');
+        window.location.href = 'index.html';
+    }
+}
+
+// Verificação contínua a cada 30 segundos
+setInterval(function() {
+    const isLoggedIn = localStorage.getItem('superControleLoggedIn');
+    const loginTime = localStorage.getItem('superControleLoginTime');
+    
+    if (isLoggedIn !== 'true' || !loginTime) {
+        document.getElementById('bloqueioAcesso').style.display = 'flex';
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 2000);
+    } else {
+        const horasPassadas = (Date.now() - parseInt(loginTime)) / (1000 * 60 * 60);
+        if (horasPassadas >= 8) {
+            localStorage.removeItem('superControleLoggedIn');
+            localStorage.removeItem('superControleLoginTime');
+            localStorage.removeItem('superControleUsuario');
+            alert('⏰ Sua sessão expirou. Por favor, faça login novamente.');
+            window.location.href = 'index.html';
+        }
+    }
+}, 30000);
+
+// Bloqueia teclas de atalho e clique direito se não estiver logado
+document.addEventListener('DOMContentLoaded', function() {
+    const isLoggedIn = localStorage.getItem('superControleLoggedIn');
+    if (isLoggedIn !== 'true') {
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey || e.metaKey || e.key === 'F12') {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
+<!-- PROTEÇÃO DE ACESSO - FIM -->
+
     <div class="container">
         <div class="header-buttons">
             <button class="btn-dashboard" onclick="window.location.href='index.html';">📊 Dashboard</button>
