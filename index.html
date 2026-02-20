@@ -622,13 +622,20 @@
             </div>
 
             <div id="faturamento-tab" class="tab-content">
-                <div class="content-grid" style="grid-template-columns: 1fr; max-width: 500px;">
+                <div class="content-grid" style="grid-template-columns: 1fr 1fr; max-width: 900px;">
                     <div class="feature-card link" onclick="irParaFaturamento()">
                         <span class="icon">💰</span>
                         <h3 class="feature-title">Pendências Faturamento</h3>
                         <p class="feature-description">Sistema completo para gerenciar faturamento, faturas pendentes e análises financeiras.</p>
                         <span class="feature-status active">Ativo</span>
                         <button class="btn-access" type="button" onclick="event.stopPropagation(); irParaFaturamento();">Acessar Sistema</button>
+                    </div>
+                    <div class="feature-card link" onclick="irParaMultas()">
+                        <span class="icon">⚠️</span>
+                        <h3 class="feature-title">Controle de Multas</h3>
+                        <p class="feature-description">Sistema completo para gerenciamento e controle de multas.</p>
+                        <span class="feature-status active">Ativo</span>
+                        <button class="btn-access" type="button" onclick="event.stopPropagation(); irParaMultas();">Acessar Sistema</button>
                     </div>
                 </div>
             </div>
@@ -746,6 +753,12 @@
         function irParaFaturamento() {
             if (localStorage.getItem('superControleLoggedIn') === 'true') {
                 window.location.href = 'faturamento.html';
+            }
+        }
+
+        function irParaMultas() {
+            if (localStorage.getItem('superControleLoggedIn') === 'true') {
+                window.location.href = 'controle-de-multas.html';
             }
         }
 
