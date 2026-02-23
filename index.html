@@ -584,6 +584,7 @@
                 <button type="button" class="tab-btn" id="btn-faturamento">💰 Pendências Faturamento</button>
                 <button type="button" class="tab-btn" id="btn-cronogramas">📅 Cronogramas</button>
                 <button type="button" class="tab-btn" id="btn-compras">🛒 Compras</button>
+                <button type="button" class="tab-btn" id="btn-satisfacao">⭐ Pesquisa de Satisfação</button>
             </div>
 
             <div id="pendencias-tab" class="tab-content active">
@@ -662,6 +663,10 @@
                         <button class="btn-access" type="button" onclick="event.stopPropagation(); irParaCompras();">Acessar Sistema</button>
                     </div>
                 </div>
+            </div>
+
+            <div id="satisfacao-tab" class="tab-content">
+                <!-- Conteúdo futuro da Pesquisa de Satisfação -->
             </div>
 
             <div class="footer">
@@ -822,14 +827,16 @@
             const btnFaturamento = document.getElementById('btn-faturamento');
             const btnCronogramas = document.getElementById('btn-cronogramas');
             const btnCompras = document.getElementById('btn-compras');
+            const btnSatisfacao = document.getElementById('btn-satisfacao');
 
             const tabPendencias = document.getElementById('pendencias-tab');
             const tabFaturamento = document.getElementById('faturamento-tab');
             const tabCronogramas = document.getElementById('cronogramas-tab');
             const tabCompras = document.getElementById('compras-tab');
+            const tabSatisfacao = document.getElementById('satisfacao-tab');
 
-            const allButtons = [btnPendencias, btnFaturamento, btnCronogramas, btnCompras];
-            const allTabs = [tabPendencias, tabFaturamento, tabCronogramas, tabCompras];
+            const allButtons = [btnPendencias, btnFaturamento, btnCronogramas, btnCompras, btnSatisfacao];
+            const allTabs = [tabPendencias, tabFaturamento, tabCronogramas, tabCompras, tabSatisfacao];
 
             function hideAllTabs() {
                 allTabs.forEach(tab => tab.classList.remove('active'));
@@ -857,6 +864,12 @@
             btnCompras.addEventListener('click', function() {
                 hideAllTabs();
                 tabCompras.classList.add('active');
+                this.classList.add('active');
+            });
+
+            btnSatisfacao.addEventListener('click', function() {
+                hideAllTabs();
+                tabSatisfacao.classList.add('active');
                 this.classList.add('active');
             });
         })();
