@@ -31,12 +31,16 @@
         .stat-value { font-size: 28px; font-weight: 700; color: #1a202c; margin-bottom: 4px; }
         .stat-subtitle { color: #a0aec0; font-size: 13px; }
         .stat-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-top: 8px; }
-        .stat-badge.negative { background: #f8d7da; color: #dc3545; } .stat-badge.positive { background: #d4edda; color: #28a745; } .stat-badge.warning { background: #fff3cd; color: #856404; }
+        .stat-badge.negative { background: #f8d7da; color: #dc3545; }
+        .stat-badge.positive { background: #d4edda; color: #28a745; }
+        .stat-badge.warning { background: #fff3cd; color: #856404; }
         .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; gap: 15px; flex-wrap: wrap; }
         .action-buttons { display: flex; gap: 12px; }
         .btn { padding: 12px 24px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; font-family: 'Inter', sans-serif; }
-        .btn-primary { background: #e53935; color: white; } .btn-primary:hover { background: #c62828; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(229,57,53,0.3); }
-        .btn-secondary { background: white; color: #4a5568; border: 1px solid #e2e8f0; } .btn-secondary:hover { background: #f7fafc; }
+        .btn-primary { background: #e53935; color: white; }
+        .btn-primary:hover { background: #c62828; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(229,57,53,0.3); }
+        .btn-secondary { background: white; color: #4a5568; border: 1px solid #e2e8f0; }
+        .btn-secondary:hover { background: #f7fafc; }
         .search-box { position: relative; width: 350px; }
         .search-box input { width: 100%; padding: 12px 16px 12px 44px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: 'Inter', sans-serif; transition: all 0.3s; }
         .search-box input:focus { outline: none; border-color: #e53935; box-shadow: 0 0 0 3px rgba(229,57,53,0.1); }
@@ -109,53 +113,42 @@
         .back-btn:hover { background: #333; transform: translateY(-2px); }
         .empty-state { text-align: center; padding: 60px 20px; color: #a0aec0; }
         .empty-state h3 { font-size: 18px; margin-bottom: 8px; color: #718096; }
-        .notificacao { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 14px 28px; border-radius: 10px; font-size: 14px; font-weight: 600; z-index: 99999; display: none; font-family: 'Inter', sans-serif; }
+        .notificacao { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 14px 28px; border-radius: 10px; font-size: 14px; font-weight: 600; z-index: 99999; display: none; font-family: 'Inter', sans-serif; white-space: nowrap; }
         .notificacao.show { display: block; animation: slideDown 0.3s; }
-        .notificacao.success { background: #28a745; color: white; } .notificacao.error { background: #dc3545; color: white; }
+        .notificacao.success { background: #28a745; color: white; }
+        .notificacao.error { background: #dc3545; color: white; }
         @keyframes slideDown { from { opacity: 0; transform: translateX(-50%) translateY(-20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+        .btn-salvar-loading { opacity: 0.7; pointer-events: none; }
         @media (max-width: 768px) { .header h1 { font-size: 24px; } .stats-grid { grid-template-columns: 1fr; } .action-bar { flex-direction: column; } .search-box { width: 100%; } .form-grid { grid-template-columns: 1fr; } .charts-grid { grid-template-columns: 1fr; } }
         ::-webkit-scrollbar { width: 10px; height: 10px; } ::-webkit-scrollbar-track { background: #f1f5f9; } ::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 5px; }
     </style>
 </head>
 <body>
-    <!-- PROTEÇÃO DE ACESSO - INÍCIO -->
 <script>
 (function() {
-    function verificarAutenticacao() {
-        const isLoggedIn = localStorage.getItem('superControleLoggedIn');
-        const loginTime = localStorage.getItem('superControleLoginTime');
-        
-        if (isLoggedIn !== 'true' || !loginTime) {
-            alert('⚠️ Acesso negado! Você precisa fazer login primeiro.');
-            window.location.href = 'index.html';
-            return false;
-        }
-        
-        const horasPassadas = (Date.now() - parseInt(loginTime)) / (1000 * 60 * 60);
-        if (horasPassadas >= 8) {
-            localStorage.removeItem('superControleLoggedIn');
-            localStorage.removeItem('superControleLoginTime');
-            localStorage.removeItem('superControleUsuario');
-            alert('⏰ Sua sessão expirou. Por favor, faça login novamente.');
-            window.location.href = 'index.html';
-            return false;
-        }
-        
-        return true;
-    }
-    
-    if (!verificarAutenticacao()) {
-        document.write('<style>body{display:none !important;visibility:hidden !important;}</style>');
-        document.addEventListener('DOMContentLoaded', function() {
-            document.body.innerHTML = '';
-        });
-    }
+    const isLoggedIn = localStorage.getItem('superControleLoggedIn');
+    const loginTime = localStorage.getItem('superControleLoginTime');
+    if (isLoggedIn !== 'true' || !loginTime) { alert('⚠️ Acesso negado!'); window.location.href = 'index.html'; return; }
+    const h = (Date.now()-parseInt(loginTime))/(1000*60*60);
+    if (h >= 8) { localStorage.removeItem('superControleLoggedIn'); localStorage.removeItem('superControleLoginTime'); alert('⏰ Sessão expirada.'); window.location.href = 'index.html'; }
 })();
 </script>
+
 <button onclick="fazerLogout()" style="position:fixed;top:20px;right:20px;z-index:9999;background:#ff4444;color:white;border:none;padding:12px 25px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 5px 15px rgba(255,68,68,0.3);text-transform:uppercase;letter-spacing:1px;">🚪 Sair</button>
-<script>function fazerLogout(){if(confirm('Sair?\')){localStorage.removeItem('superControleLoggedIn');localStorage.removeItem('superControleLoginTime');window.location.href='index.html';}}</script>
+<script>
+function fazerLogout() {
+    if (confirm('Deseja realmente sair?')) {
+        localStorage.removeItem('superControleLoggedIn');
+        localStorage.removeItem('superControleLoginTime');
+        localStorage.removeItem('superControleUsuario');
+        window.location.href = 'index.html';
+    }
+}
+</script>
+
 <div id="notificacao" class="notificacao"></div>
 <button class="back-btn" onclick="window.location.href='index.html'">← Voltar ao Dashboard</button>
+
 <div class="container">
     <div class="header-top">
         <div class="header-left">
@@ -178,10 +171,12 @@
             <button class="btn-filter" onclick="aplicarFiltroData()">Filtrar</button>
         </div>
     </div>
+
     <div class="header">
         <h1>Controle de Multas</h1>
         <p>Gerencie e acompanhe todas as multas por O.S. de forma centralizada</p>
     </div>
+
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-header"><div class="stat-label">Total de Multas</div><div class="stat-icon red">⚠️</div></div>
@@ -206,6 +201,7 @@
             <div class="stat-badge warning" id="statPctMedio">0% do total</div>
         </div>
     </div>
+
     <div class="action-bar">
         <div class="action-buttons">
             <button class="btn btn-primary" onclick="abrirModal()"><span>+</span> Registrar Multa</button>
@@ -214,6 +210,7 @@
             <input type="text" id="searchInput" placeholder="Buscar por O.S., cliente..." oninput="buscarItens()">
         </div>
     </div>
+
     <div class="tabs-container">
         <button class="tab-btn active" onclick="switchTab('baixo')">🟢 Baixo Risco <span class="tab-badge" id="badgeBaixo">0</span></button>
         <button class="tab-btn" onclick="switchTab('medio')">🟡 Risco Médio <span class="tab-badge" id="badgeMedio">0</span></button>
@@ -221,35 +218,31 @@
         <button class="tab-btn" onclick="switchTab('todas')">📋 Todas <span class="tab-badge" id="badgeTodas">0</span></button>
         <button class="tab-btn" onclick="switchTab('graficos')">📊 Gráficos & Análises</button>
     </div>
-    <!-- Tab Baixo Risco -->
+
     <div id="tab-baixo" class="tab-content active">
         <div class="table-wrapper"><table>
             <thead><tr><th>Nº OS</th><th>Cliente</th><th>Valor da Multa</th><th>Data da Multa</th><th>Motivo</th><th>Status</th><th class="actions-col">⋯</th></tr></thead>
             <tbody id="tabelaBaixo"><tr><td colspan="7" class="empty-state"><h3>Carregando...</h3></td></tr></tbody>
         </table></div>
     </div>
-    <!-- Tab Risco Médio -->
     <div id="tab-medio" class="tab-content">
         <div class="table-wrapper"><table>
             <thead><tr><th>Nº OS</th><th>Cliente</th><th>Valor da Multa</th><th>Data da Multa</th><th>Motivo</th><th>Status</th><th class="actions-col">⋯</th></tr></thead>
             <tbody id="tabelaMedio"><tr><td colspan="7" class="empty-state"><h3>Nenhuma multa de risco médio</h3></td></tr></tbody>
         </table></div>
     </div>
-    <!-- Tab Alto Risco -->
     <div id="tab-alto" class="tab-content">
         <div class="table-wrapper"><table>
             <thead><tr><th>Nº OS</th><th>Cliente</th><th>Valor da Multa</th><th>Data da Multa</th><th>Motivo</th><th>Status</th><th class="actions-col">⋯</th></tr></thead>
             <tbody id="tabelaAlto"><tr><td colspan="7" class="empty-state"><h3>Nenhuma multa de alto risco</h3></td></tr></tbody>
         </table></div>
     </div>
-    <!-- Tab Todas -->
     <div id="tab-todas" class="tab-content">
         <div class="table-wrapper"><table>
             <thead><tr><th>Nº OS</th><th>Cliente</th><th>Valor da Multa</th><th>Data da Multa</th><th>Motivo</th><th>Status</th><th class="actions-col">⋯</th></tr></thead>
             <tbody id="tabelaTodas"><tr><td colspan="7" class="empty-state"><h3>Carregando...</h3></td></tr></tbody>
         </table></div>
     </div>
-    <!-- Tab Gráficos -->
     <div id="tab-graficos" class="tab-content">
         <div class="charts-section">
             <h2>📊 Análise de Multas</h2>
@@ -279,14 +272,15 @@
     </div>
 </div>
 
-<!-- Modal -->
+<!-- Modal Cadastro/Edição -->
 <div id="modal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
             <h2 id="modalTitle">Registrar Multa</h2>
             <button class="close-modal" onclick="fecharModal()">×</button>
         </div>
-        <form id="formItem" onsubmit="salvarItem(event)">
+        <!-- SEM onsubmit no form — botão é type="button" para evitar reload da página -->
+        <form id="formItem">
             <input type="hidden" id="editFirebaseKey">
             <div class="form-grid">
                 <div class="form-group">
@@ -320,19 +314,20 @@
                 </div>
             </div>
             <div class="action-buttons">
-                <button type="submit" class="btn btn-primary">💾 Salvar</button>
+                <!-- type="button" evita submit do form e reload da página -->
+                <button type="button" id="btnSalvar" class="btn btn-primary" onclick="salvarItem()">💾 Salvar</button>
                 <button type="button" class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Confirmação -->
+<!-- Modal Confirmação Exclusão -->
 <div id="confirmModal" class="confirm-modal">
     <div class="confirm-content">
         <div class="confirm-icon">🗑️</div>
         <h3>Confirmar Exclusão</h3>
-        <p>Tem certeza que deseja excluir esta multa?</p>
+        <p>Tem certeza que deseja excluir esta multa? Esta ação não pode ser desfeita.</p>
         <div class="confirm-buttons">
             <button class="btn-cancel" onclick="fecharConfirmacao()">Cancelar</button>
             <button class="btn-confirm-delete" onclick="confirmarExclusao()">Sim, Excluir</button>
@@ -357,20 +352,31 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const hoje = new Date();
+
 let mesFiltro = 0, anoFiltro = 0;
 let todosItens = [], itensFiltrados = [], itemParaDeletar = null;
-let chartMensal=null, chartStatus=null, chartClientes=null, chartQtdMensal=null;
+let chartMensal = null, chartStatus = null, chartClientes = null, chartQtdMensal = null;
 
+// Listener em tempo real — reconstrói array do zero a cada mudança
 onValue(ref(db, 'controle_multas'), snap => {
     todosItens = [];
-    if (snap.exists()) snap.forEach(c => todosItens.push({ firebaseKey: c.key, ...c.val() }));
-    aplicarFiltros(); atualizarEstatisticas(); atualizarGraficos();
+    if (snap.exists()) {
+        snap.forEach(child => {
+            todosItens.push({ firebaseKey: child.key, ...child.val() });
+        });
+    }
+    aplicarFiltros();
+    atualizarEstatisticas();
+    atualizarGraficos();
 });
 
+// ---- FILTROS ----
 window.aplicarFiltroData = function() {
     mesFiltro = parseInt(document.getElementById('filterMes').value);
     anoFiltro = parseInt(document.getElementById('filterAno').value);
-    aplicarFiltros(); atualizarEstatisticas(); atualizarGraficos();
+    aplicarFiltros();
+    atualizarEstatisticas();
+    atualizarGraficos();
     mostrarNotificacao('✓ Filtro aplicado!', 'success');
 };
 
@@ -378,7 +384,7 @@ function passaFiltro(item) {
     if (mesFiltro === 0 && anoFiltro === 0) return true;
     if (!item.dataMulta) return true;
     const d = new Date(item.dataMulta + 'T00:00:00');
-    if (mesFiltro !== 0 && d.getMonth()+1 !== mesFiltro) return false;
+    if (mesFiltro !== 0 && d.getMonth() + 1 !== mesFiltro) return false;
     if (anoFiltro !== 0 && d.getFullYear() !== anoFiltro) return false;
     return true;
 }
@@ -388,48 +394,65 @@ function aplicarFiltros() {
     renderizarTabelas();
 }
 
+// ---- ESTATÍSTICAS ----
 function atualizarEstatisticas() {
     const its = itensFiltrados;
     const baixo = its.filter(i => i.status === 'Baixo Risco');
     const medio = its.filter(i => i.status === 'Risco Médio');
     const alto  = its.filter(i => i.status === 'Alto Risco');
     const total = its.length;
-    const valorTotal = its.reduce((s,i) => s + parseMoeda(i.valorMulta), 0);
-    const valorAlto  = alto.reduce((s,i)  => s + parseMoeda(i.valorMulta), 0);
-    const valorMedio = medio.reduce((s,i) => s + parseMoeda(i.valorMulta), 0);
-    document.getElementById('statTotal').textContent = total;
+    const valorTotal = its.reduce((s, i) => s + parseMoeda(i.valorMulta), 0);
+    const valorAlto  = alto.reduce((s, i)  => s + parseMoeda(i.valorMulta), 0);
+    const valorMedio = medio.reduce((s, i) => s + parseMoeda(i.valorMulta), 0);
+
+    document.getElementById('statTotal').textContent    = total;
     document.getElementById('statValorTotal').textContent = fmtValor(valorTotal);
-    document.getElementById('statAlto').textContent = alto.length;
+    document.getElementById('statAlto').textContent      = alto.length;
     document.getElementById('statValorAlto').textContent = fmtValor(valorAlto);
-    document.getElementById('statPctAlto').textContent = total > 0 ? Math.round(alto.length/total*100)+'% do total' : '0%';
-    document.getElementById('statMedio').textContent = medio.length;
-    document.getElementById('statValorMedio').textContent = fmtValor(valorMedio);
-    document.getElementById('statPctMedio').textContent = total > 0 ? Math.round(medio.length/total*100)+'% do total' : '0%';
-    document.getElementById('badgeBaixo').textContent = baixo.length;
-    document.getElementById('badgeMedio').textContent = medio.length;
-    document.getElementById('badgeAlto').textContent = alto.length;
-    document.getElementById('badgeTodas').textContent = total;
+    document.getElementById('statPctAlto').textContent   = total > 0 ? Math.round(alto.length/total*100)+'% do total' : '0%';
+    document.getElementById('statMedio').textContent     = medio.length;
+    document.getElementById('statValorMedio').textContent= fmtValor(valorMedio);
+    document.getElementById('statPctMedio').textContent  = total > 0 ? Math.round(medio.length/total*100)+'% do total' : '0%';
+    document.getElementById('badgeBaixo').textContent    = baixo.length;
+    document.getElementById('badgeMedio').textContent    = medio.length;
+    document.getElementById('badgeAlto').textContent     = alto.length;
+    document.getElementById('badgeTodas').textContent    = total;
 }
 
-function parseMoeda(str) { if(!str) return 0; return parseFloat(String(str).replace(/[^\d,]/g,'').replace(',','.'))||0; }
-function fmtValor(v) { if(v>=1000000) return 'R$ '+(v/1000000).toFixed(2)+' mi'; return 'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function formatarData(d) { if(!d) return '-'; const [a,m,dia]=d.split('-'); return dia+'/'+m+'/'+a; }
-function getStatusClass(s) { const m={'Baixo Risco':'baixo-risco','Risco Médio':'risco-medio','Alto Risco':'alto-risco'}; return m[s]||'alto-risco'; }
+// ---- HELPERS ----
+function parseMoeda(str) {
+    if (!str) return 0;
+    return parseFloat(String(str).replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+}
+function fmtValor(v) {
+    if (v >= 1000000) return 'R$ ' + (v/1000000).toFixed(2) + ' mi';
+    return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function formatarData(d) {
+    if (!d) return '-';
+    const [a, m, dia] = d.split('-');
+    return `${dia}/${m}/${a}`;
+}
+function getStatusClass(s) {
+    const map = { 'Baixo Risco': 'baixo-risco', 'Risco Médio': 'risco-medio', 'Alto Risco': 'alto-risco' };
+    return map[s] || 'alto-risco';
+}
 
+// ---- RENDERIZAÇÃO ----
 function gerarLinha(item) {
     return `<tr>
-        <td><strong>${item.numeroOS}</strong></td>
-        <td>${item.cliente}</td>
-        <td><strong style="color:#e53935">${item.valorMulta ? 'R$ '+item.valorMulta : '-'}</strong></td>
+        <td><strong>${item.numeroOS || '—'}</strong></td>
+        <td>${item.cliente || '—'}</td>
+        <td><strong style="color:#e53935">${item.valorMulta ? 'R$ ' + item.valorMulta : '-'}</strong></td>
         <td>${formatarData(item.dataMulta)}</td>
-        <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${item.motivo||''}">${item.motivo||'—'}</td>
+        <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${item.motivo || ''}">${item.motivo || '—'}</td>
         <td><span class="status-badge ${getStatusClass(item.status)}">${item.status}</span></td>
         <td class="actions-col">
             <div class="actions-menu">
-                <button class="btn-actions" onclick="event.stopPropagation();toggleMenu(event,'${item.firebaseKey}')">⋯</button>
+                <button class="btn-actions" onclick="event.stopPropagation(); toggleMenu(event, '${item.firebaseKey}')">⋯</button>
                 <div class="actions-dropdown" id="menu-${item.firebaseKey}">
-                    <button onclick="event.stopPropagation();abrirModalEdicao('${item.firebaseKey}');fecharMenus()">✏️ Editar</button>
-                    <button class="delete" onclick="event.stopPropagation();abrirConfirmacao('${item.firebaseKey}');fecharMenus()">🗑️ Excluir</button>
+                    <button onclick="event.stopPropagation(); abrirModalEdicao('${item.firebaseKey}'); fecharMenus()">✏️ Editar</button>
+                    <button class="delete" onclick="event.stopPropagation(); abrirConfirmacao('${item.firebaseKey}'); fecharMenus()">🗑️ Excluir</button>
                 </div>
             </div>
         </td>
@@ -440,161 +463,252 @@ function renderizarTabelas() {
     const baixo = itensFiltrados.filter(i => i.status === 'Baixo Risco');
     const medio = itensFiltrados.filter(i => i.status === 'Risco Médio');
     const alto  = itensFiltrados.filter(i => i.status === 'Alto Risco');
-    const todas = itensFiltrados;
-    const empty = (msg) => `<tr><td colspan="7" class="empty-state"><h3>${msg}</h3></td></tr>`;
-    document.getElementById('tabelaBaixo').innerHTML  = baixo.length ? baixo.map(gerarLinha).join('') : empty('Nenhuma multa de baixo risco');
-    document.getElementById('tabelaMedio').innerHTML  = medio.length ? medio.map(gerarLinha).join('') : empty('Nenhuma multa de risco médio');
-    document.getElementById('tabelaAlto').innerHTML   = alto.length  ? alto.map(gerarLinha).join('')  : empty('Nenhuma multa de alto risco');
-    document.getElementById('tabelaTodas').innerHTML  = todas.length ? todas.map(gerarLinha).join('') : empty('Nenhuma multa registrada');
+    const empty = msg => `<tr><td colspan="7" class="empty-state"><h3>${msg}</h3></td></tr>`;
+
+    document.getElementById('tabelaBaixo').innerHTML = baixo.length ? baixo.map(gerarLinha).join('') : empty('Nenhuma multa de baixo risco');
+    document.getElementById('tabelaMedio').innerHTML = medio.length ? medio.map(gerarLinha).join('') : empty('Nenhuma multa de risco médio');
+    document.getElementById('tabelaAlto').innerHTML  = alto.length  ? alto.map(gerarLinha).join('')  : empty('Nenhuma multa de alto risco');
+    document.getElementById('tabelaTodas').innerHTML = itensFiltrados.length ? itensFiltrados.map(gerarLinha).join('') : empty('Nenhuma multa registrada');
 }
 
+// ---- BUSCA ----
 window.buscarItens = function() {
     const t = document.getElementById('searchInput').value.toLowerCase();
-    if (!t) { aplicarFiltros(); return; }
-    itensFiltrados = todosItens.filter(i => passaFiltro(i) && (
-        (i.numeroOS||''). toLowerCase().includes(t) ||
-        (i.cliente||''). toLowerCase().includes(t) ||
-        (i.motivo||''). toLowerCase().includes(t)
-    ));
+    itensFiltrados = todosItens.filter(i =>
+        passaFiltro(i) && (
+            (i.numeroOS || '').toLowerCase().includes(t) ||
+            (i.cliente  || '').toLowerCase().includes(t) ||
+            (i.motivo   || '').toLowerCase().includes(t)
+        )
+    );
     renderizarTabelas();
 };
 
+// ---- TABS ----
 window.switchTab = function(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => {
         b.classList.remove('active');
-        const oc = b.getAttribute('onclick')||''
-        if (oc.includes('"'+tab+'"') || oc.includes("'"+tab+"'")) b.classList.add('active');
+        const oc = b.getAttribute('onclick') || '';
+        if (oc.includes("'" + tab + "'")) b.classList.add('active');
     });
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.getElementById('tab-'+tab).classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
     if (tab === 'graficos') setTimeout(atualizarGraficos, 100);
 };
 
+// ---- MODAL ABRIR / FECHAR ----
 window.abrirModal = function() {
-    document.getElementById('modalTitle').textContent = 'Registrar Multa';
-    document.getElementById('formItem').reset();
-    document.getElementById('editFirebaseKey').value = '';
-    document.getElementById('dataMulta').value = hoje.toISOString().split('T')[0];
+    document.getElementById('modalTitle').textContent   = 'Registrar Multa';
+    document.getElementById('editFirebaseKey').value    = '';
+    document.getElementById('numeroOS').value           = '';
+    document.getElementById('cliente').value            = '';
+    document.getElementById('valorMulta').value         = '';
+    document.getElementById('dataMulta').value          = hoje.toISOString().split('T')[0];
+    document.getElementById('motivo').value             = '';
+    document.getElementById('status').value             = '';
     document.getElementById('modal').classList.add('show');
 };
-window.fecharModal = function() { document.getElementById('modal').classList.remove('show'); };
+
+window.fecharModal = function() {
+    document.getElementById('modal').classList.remove('show');
+};
 
 window.abrirModalEdicao = function(fk) {
     const item = todosItens.find(i => i.firebaseKey === fk);
     if (!item) return;
-    document.getElementById('modalTitle').textContent = 'Editar Multa';
-    document.getElementById('editFirebaseKey').value = fk;
-    document.getElementById('numeroOS').value = item.numeroOS||''
-    document.getElementById('cliente').value = item.cliente||''
-    document.getElementById('valorMulta').value = item.valorMulta||''
-    document.getElementById('dataMulta').value = item.dataMulta||''
-    document.getElementById('motivo').value = item.motivo||''
-    document.getElementById('status').value = item.status||''
+    document.getElementById('modalTitle').textContent   = 'Editar Multa';
+    document.getElementById('editFirebaseKey').value    = fk;
+    document.getElementById('numeroOS').value           = item.numeroOS    || '';
+    document.getElementById('cliente').value            = item.cliente     || '';
+    document.getElementById('valorMulta').value         = item.valorMulta  || '';
+    document.getElementById('dataMulta').value          = item.dataMulta   || '';
+    document.getElementById('motivo').value             = item.motivo      || '';
+    document.getElementById('status').value             = item.status      || '';
     document.getElementById('modal').classList.add('show');
 };
 
-window.salvarItem = async function(e) {
-    e.preventDefault();
-    const fk = document.getElementById('editFirebaseKey').value;
+// ---- SALVAR (type="button" — sem submit/reload) ----
+window.salvarItem = async function() {
+    // Validação manual dos campos obrigatórios
+    const numeroOS  = document.getElementById('numeroOS').value.trim();
+    const cliente   = document.getElementById('cliente').value.trim();
+    const valorMulta= document.getElementById('valorMulta').value.trim();
+    const dataMulta = document.getElementById('dataMulta').value;
+    const motivo    = document.getElementById('motivo').value.trim();
+    const status    = document.getElementById('status').value;
+    const fk        = document.getElementById('editFirebaseKey').value;
+
+    if (!numeroOS || !cliente || !valorMulta || !dataMulta || !status) {
+        mostrarNotificacao('⚠️ Preencha todos os campos obrigatórios!', 'error');
+        return;
+    }
+
+    const btnSalvar = document.getElementById('btnSalvar');
+    btnSalvar.textContent = '⏳ Salvando...';
+    btnSalvar.classList.add('btn-salvar-loading');
+
     const item = {
-        numeroOS: document.getElementById('numeroOS').value.trim(),
-        cliente: document.getElementById('cliente').value.trim(),
-        valorMulta: document.getElementById('valorMulta').value.trim(),
-        dataMulta: document.getElementById('dataMulta').value,
-        motivo: document.getElementById('motivo').value.trim(),
-        status: document.getElementById('status').value,
-        dataCriacao: fk ? (todosItens.find(i=>i.firebaseKey===fk)?.dataCriacao||new Date().toISOString()) : new Date().toISOString()
+        numeroOS,
+        cliente,
+        valorMulta,
+        dataMulta,
+        motivo,
+        status,
+        dataCriacao: fk
+            ? (todosItens.find(i => i.firebaseKey === fk)?.dataCriacao || new Date().toISOString())
+            : new Date().toISOString()
     };
+
     try {
-        if (fk) await set(ref(db,'controle_multas/'+fk), item);
-        else await push(ref(db,'controle_multas'), item);
+        if (fk) {
+            // Edição: sobrescreve o registro existente
+            await set(ref(db, 'controle_multas/' + fk), item);
+            mostrarNotificacao('✓ Multa atualizada com sucesso!', 'success');
+        } else {
+            // Novo registro: push() gera chave única no Firebase
+            await push(ref(db, 'controle_multas'), item);
+            mostrarNotificacao('✓ Multa registrada com sucesso!', 'success');
+        }
         fecharModal();
-        mostrarNotificacao('✓ Multa salva!', 'success');
-    } catch(err) { mostrarNotificacao('✗ Erro: '+err.message, 'error'); }
+    } catch (err) {
+        mostrarNotificacao('✗ Erro ao salvar: ' + err.message, 'error');
+    } finally {
+        btnSalvar.textContent = '💾 Salvar';
+        btnSalvar.classList.remove('btn-salvar-loading');
+    }
 };
 
-window.abrirConfirmacao = function(fk) { itemParaDeletar=fk; document.getElementById('confirmModal').classList.add('show'); };
-window.fecharConfirmacao = function() { itemParaDeletar=null; document.getElementById('confirmModal').classList.remove('show'); };
+// ---- EXCLUSÃO ----
+window.abrirConfirmacao = function(fk) {
+    itemParaDeletar = fk;
+    document.getElementById('confirmModal').classList.add('show');
+};
+window.fecharConfirmacao = function() {
+    itemParaDeletar = null;
+    document.getElementById('confirmModal').classList.remove('show');
+};
 window.confirmarExclusao = async function() {
     if (!itemParaDeletar) return;
-    try { await remove(ref(db,'controle_multas/'+itemParaDeletar)); mostrarNotificacao('✓ Multa excluída!','success'); }
-    catch(err) { mostrarNotificacao('✗ Erro: '+err.message,'error'); }
+    try {
+        await remove(ref(db, 'controle_multas/' + itemParaDeletar));
+        mostrarNotificacao('✓ Multa excluída com sucesso!', 'success');
+    } catch (err) {
+        mostrarNotificacao('✗ Erro ao excluir: ' + err.message, 'error');
+    }
     fecharConfirmacao();
 };
 
+// ---- MENUS ----
 window.toggleMenu = function(e, id) {
     e.stopPropagation();
-    const menu = document.getElementById('menu-'+id);
-    document.querySelectorAll('.actions-dropdown').forEach(m => { if(m!==menu) m.classList.remove('show'); });
+    const menu = document.getElementById('menu-' + id);
+    document.querySelectorAll('.actions-dropdown').forEach(m => { if (m !== menu) m.classList.remove('show'); });
     menu.classList.toggle('show');
 };
-window.fecharMenus = function() { document.querySelectorAll('.actions-dropdown').forEach(m => m.classList.remove('show')); };
-document.addEventListener('click', e => { if(!e.target.closest('.actions-menu')) fecharMenus(); });
+window.fecharMenus = function() {
+    document.querySelectorAll('.actions-dropdown').forEach(m => m.classList.remove('show'));
+};
+document.addEventListener('click', e => {
+    if (!e.target.closest('.actions-menu')) fecharMenus();
+});
 
+// ---- FORMATAÇÃO VALOR ----
 window.formatarCampoValor = function(el) {
-    let v = el.value.replace(/\D/g,''); if(!v){el.value='';return;}
-    el.value = (parseInt(v)/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    let v = el.value.replace(/\D/g, '');
+    if (!v) { el.value = ''; return; }
+    el.value = (parseInt(v) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
+// ---- NOTIFICAÇÃO ----
 function mostrarNotificacao(msg, tipo) {
     const el = document.getElementById('notificacao');
-    el.textContent=msg; el.className='notificacao '+tipo+' show';
-    setTimeout(()=>el.classList.remove('show'),3000);
+    el.textContent = msg;
+    el.className = 'notificacao ' + tipo + ' show';
+    setTimeout(() => el.classList.remove('show'), 3500);
 }
 
+// ---- GRÁFICOS ----
 function atualizarGraficos() {
     const dados = itensFiltrados.length > 0 ? itensFiltrados : todosItens;
     const mNomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
-    // Chart 1 - Valor por mês
+    // Chart 1 — Valor por mês (barras)
     const valMes = {};
     dados.forEach(i => {
         if (!i.dataMulta) return;
-        const d = new Date(i.dataMulta+'T00:00:00');
-        const k = mNomes[d.getMonth()]+' '+d.getFullYear();
-        valMes[k] = (valMes[k]||0) + parseMoeda(i.valorMulta);
+        const d = new Date(i.dataMulta + 'T00:00:00');
+        const k = mNomes[d.getMonth()] + ' ' + d.getFullYear();
+        valMes[k] = (valMes[k] || 0) + parseMoeda(i.valorMulta);
     });
     if (chartMensal) chartMensal.destroy();
     chartMensal = new Chart(document.getElementById('chartMensal').getContext('2d'), {
         type: 'bar',
-        data: { labels: Object.keys(valMes), datasets: [{ label: 'Valor (R$)', data: Object.values(valMes), backgroundColor: 'rgba(229,57,53,0.8)', borderColor: '#c62828', borderWidth: 2, borderRadius: 6 }] },
-        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'R$ '+ctx.raw.toLocaleString('pt-BR',{minimumFractionDigits:2})}}}, scales:{y:{beginAtZero:true,ticks:{callback:v=>'R$'+v.toLocaleString('pt-BR')},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}} }
+        data: {
+            labels: Object.keys(valMes),
+            datasets: [{ label: 'Valor (R$)', data: Object.values(valMes), backgroundColor: 'rgba(229,57,53,0.8)', borderColor: '#c62828', borderWidth: 2, borderRadius: 6 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => 'R$ ' + ctx.raw.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) } } },
+            scales: { y: { beginAtZero: true, ticks: { callback: v => 'R$' + v.toLocaleString('pt-BR') }, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+        }
     });
 
-    // Chart 2 - Donut por nível de risco
-    const riskCount = {'Baixo Risco':0,'Risco Médio':0,'Alto Risco':0};
-    dados.forEach(i => { if(riskCount[i.status]!==undefined) riskCount[i.status]++; else riskCount['Alto Risco']++; });
+    // Chart 2 — Donut por nível de risco
+    const riskCount = { 'Baixo Risco': 0, 'Risco Médio': 0, 'Alto Risco': 0 };
+    dados.forEach(i => { if (riskCount[i.status] !== undefined) riskCount[i.status]++; else riskCount['Alto Risco']++; });
     if (chartStatus) chartStatus.destroy();
     chartStatus = new Chart(document.getElementById('chartStatus').getContext('2d'), {
         type: 'doughnut',
-        data: { labels: Object.keys(riskCount), datasets: [{ data: Object.values(riskCount), backgroundColor: ['#22c55e','#f59e0b','#ef4444'], borderWidth: 0, hoverOffset: 8 }] },
-        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{padding:16,font:{size:13}}},tooltip:{callbacks:{label:ctx=>ctx.label+': '+ctx.raw+' multa(s)'}}}, cutout:'60%' }
+        data: {
+            labels: Object.keys(riskCount),
+            datasets: [{ data: Object.values(riskCount), backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'], borderWidth: 0, hoverOffset: 8 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { padding: 16, font: { size: 13 } } }, tooltip: { callbacks: { label: ctx => ctx.label + ': ' + ctx.raw + ' multa(s)' } } },
+            cutout: '60%'
+        }
     });
 
-    // Chart 3 - Top clientes
+    // Chart 3 — Top clientes (barras horizontais)
     const valCli = {};
-    dados.forEach(i => { const c=i.cliente||'Sem cliente'; valCli[c]=(valCli[c]||0)+parseMoeda(i.valorMulta); });
-    const top = Object.entries(valCli).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    dados.forEach(i => { const c = i.cliente || 'Sem cliente'; valCli[c] = (valCli[c] || 0) + parseMoeda(i.valorMulta); });
+    const top = Object.entries(valCli).sort((a, b) => b[1] - a[1]).slice(0, 8);
     if (chartClientes) chartClientes.destroy();
     chartClientes = new Chart(document.getElementById('chartClientes').getContext('2d'), {
         type: 'bar',
-        data: { labels: top.map(e=>e[0]), datasets: [{ label: 'Valor (R$)', data: top.map(e=>e[1]), backgroundColor:['#ef4444','#f97316','#f59e0b','#eab308','#84cc16','#22c55e','#06b6d4','#3b82f6'], borderRadius:6, borderWidth:0 }] },
-        options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'R$ '+ctx.raw.toLocaleString('pt-BR',{minimumFractionDigits:2})}}}, scales:{x:{beginAtZero:true,ticks:{callback:v=>'R$'+v.toLocaleString('pt-BR')},grid:{color:'#f1f5f9'}},y:{grid:{display:false}}} }
+        data: {
+            labels: top.map(e => e[0]),
+            datasets: [{ label: 'Valor (R$)', data: top.map(e => e[1]), backgroundColor: ['#ef4444','#f97316','#f59e0b','#eab308','#84cc16','#22c55e','#06b6d4','#3b82f6'], borderRadius: 6, borderWidth: 0 }]
+        },
+        options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => 'R$ ' + ctx.raw.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) } } },
+            scales: { x: { beginAtZero: true, ticks: { callback: v => 'R$' + v.toLocaleString('pt-BR') }, grid: { color: '#f1f5f9' } }, y: { grid: { display: false } } }
+        }
     });
 
-    // Chart 4 - Quantidade por mês (linha)
+    // Chart 4 — Quantidade por mês (linha)
     const qtdMes = {};
     dados.forEach(i => {
         if (!i.dataMulta) return;
-        const d = new Date(i.dataMulta+'T00:00:00');
-        const k = mNomes[d.getMonth()]+' '+d.getFullYear();
-        qtdMes[k] = (qtdMes[k]||0)+1;
+        const d = new Date(i.dataMulta + 'T00:00:00');
+        const k = mNomes[d.getMonth()] + ' ' + d.getFullYear();
+        qtdMes[k] = (qtdMes[k] || 0) + 1;
     });
     if (chartQtdMensal) chartQtdMensal.destroy();
     chartQtdMensal = new Chart(document.getElementById('chartQtdMensal').getContext('2d'), {
         type: 'line',
-        data: { labels: Object.keys(qtdMes), datasets: [{ label:'Multas', data:Object.values(qtdMes), borderColor:'#e53935', backgroundColor:'rgba(229,57,53,0.1)', tension:0.4, fill:true, pointBackgroundColor:'#e53935', pointRadius:5, pointHoverRadius:8, borderWidth:2 }] },
-        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw+' multa(s)'}}}, scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}} }
+        data: {
+            labels: Object.keys(qtdMes),
+            datasets: [{ label: 'Multas', data: Object.values(qtdMes), borderColor: '#e53935', backgroundColor: 'rgba(229,57,53,0.1)', tension: 0.4, fill: true, pointBackgroundColor: '#e53935', pointRadius: 5, pointHoverRadius: 8, borderWidth: 2 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.raw + ' multa(s)' } } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+        }
     });
 }
 </script>
