@@ -666,7 +666,15 @@
             </div>
 
             <div id="satisfacao-tab" class="tab-content">
-                <!-- Conteúdo futuro da Pesquisa de Satisfação -->
+                <div class="content-grid" style="grid-template-columns: 1fr; max-width: 500px">
+                    <div class="feature-card link" onclick="irParaSatisfacao()">
+                        <span class="icon">⭐</span>
+                        <h3 class="feature-title">Pesquisa de Satisfação</h3>
+                        <p class="feature-description">Colete e analise o feedback dos clientes com formulários intuitivos e relatórios de satisfação em tempo real.</p>
+                        <span class="feature-status active">Ativo</span>
+                        <button class="btn-access" type="button" onclick="event.stopPropagation(); irParaSatisfacao()">Acessar Sistema</button>
+                    </div>
+                </div>
             </div>
 
             <div class="footer">
@@ -776,6 +784,12 @@
         function irParaCompras() {
             if (localStorage.getItem('superControleLoggedIn') === 'true') {
                 window.location.href = 'gerenciarcompras.html';
+            }
+        }
+
+        function irParaSatisfacao() {
+            if (localStorage.getItem('superControleLoggedIn') === 'true') {
+                window.location.href = 'satisfacao.html';
             }
         }
 
